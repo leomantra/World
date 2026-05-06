@@ -1,0 +1,1722 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no"/>
+<meta name="theme-color" content="#B5121B"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="Jodi.in"/>
+<title>Jodi.in — Matrimonial App</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --c:#B5121B;--cr:#E8354A;--rose:#FF7A8A;--gold:#C9A84C;--dark:#140608;
+  --bg:#FDF6EF;--card:#fff;--muted:#9A8A8A;--border:#F0E8E0;
+  --safe-t:env(safe-area-inset-top,0px);--safe-b:env(safe-area-inset-bottom,0px);
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden;background:#140608;font-family:'DM Sans',sans-serif}
+#app{width:100vw;height:100vh;height:100dvh;display:flex;flex-direction:column;background:var(--bg);overflow:hidden;position:relative}
+
+/* ─ SCREENS ─ */
+.screen{position:absolute;inset:0;display:none;flex-direction:column;overflow:hidden}
+.screen.active{display:flex}
+
+/* ─ SCROLL ─ */
+.scrollable{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;padding-bottom:80px}
+.scrollable::-webkit-scrollbar{display:none}
+
+/* ─ TOAST ─ */
+#toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%) translateY(20px);
+background:var(--dark);color:#fff;padding:10px 20px;border-radius:24px;font-size:13px;
+opacity:0;transition:all .3s;z-index:9999;white-space:nowrap;pointer-events:none}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* ─ OVERLAY PANELS ─ */
+.panel{position:fixed;inset:0;z-index:200;display:none;flex-direction:column}
+.panel.open{display:flex}
+.panel-bg{position:absolute;inset:0;background:rgba(20,6,8,.5);backdrop-filter:blur(4px)}
+.panel-sheet{position:absolute;bottom:0;left:0;right:0;background:var(--card);border-radius:24px 24px 0 0;
+padding:20px;max-height:90vh;overflow-y:auto;animation:sheetUp .3s ease}
+.panel-sheet::-webkit-scrollbar{display:none}
+.panel-top{position:absolute;top:0;left:0;right:0;bottom:0;background:var(--card);animation:slideInRight .3s ease}
+
+/* ─ TOP NAV BAR ─ */
+.top-bar{display:flex;align-items:center;gap:12px;padding:calc(var(--safe-t)+12px) 18px 12px;
+background:var(--card);border-bottom:1px solid var(--border);flex-shrink:0;z-index:10}
+.top-bar-title{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:700;color:var(--dark);flex:1}
+.icon-btn{width:36px;height:36px;border-radius:50%;border:none;background:var(--bg);
+display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:18px;flex-shrink:0}
+.back-icon-btn{background:none;border:none;font-size:24px;cursor:pointer;color:var(--c);line-height:1}
+
+/* ─ BOTTOM NAV ─ */
+.bnav{display:flex;background:var(--card);border-top:1px solid var(--border);
+padding:6px 0 calc(6px + var(--safe-b));box-shadow:0 -4px 20px rgba(0,0,0,.06);flex-shrink:0}
+.bnav-btn{flex:1;display:flex;flex-direction:column;align-items:center;background:none;border:none;
+cursor:pointer;padding:4px 0;font-family:'DM Sans',sans-serif;position:relative}
+.bnav-icon{font-size:20px;line-height:1}
+.bnav-label{font-size:9px;color:var(--muted);margin-top:2px;transition:color .2s}
+.bnav-btn.active .bnav-label{color:var(--c);font-weight:600}
+.bnav-badge{position:absolute;top:0;right:calc(50% - 18px);background:var(--c);color:#fff;
+font-size:9px;min-width:15px;height:15px;border-radius:8px;display:flex;align-items:center;
+justify-content:center;padding:0 3px}
+
+/* ─ BUTTONS ─ */
+.btn{display:block;width:100%;padding:14px;border-radius:14px;border:none;font-size:15px;
+font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;letter-spacing:.2px;transition:all .2s}
+.btn-red{background:linear-gradient(135deg,var(--c),var(--cr));color:#fff;box-shadow:0 6px 20px rgba(181,18,27,.3)}
+.btn-outline{background:transparent;border:2px solid var(--c);color:var(--c)}
+.btn-gold{background:linear-gradient(135deg,var(--gold),#e8c76e);color:var(--dark);box-shadow:0 6px 20px rgba(201,168,76,.3)}
+.btn-sm{padding:8px 18px;width:auto;font-size:13px;border-radius:10px}
+.btn:active{transform:scale(.97)}
+
+/* ─ FORM ─ */
+.form-group{margin-bottom:16px}
+.form-label{font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;display:block}
+.form-input{width:100%;padding:13px 16px;border:1.5px solid var(--border);border-radius:12px;
+font-size:15px;outline:none;background:#fff;font-family:'DM Sans',sans-serif;color:var(--dark);transition:border .2s}
+.form-input:focus{border-color:var(--rose)}
+.form-select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23999' fill='none' stroke-width='1.5'/%3E%3C/svg%3E");
+background-repeat:no-repeat;background-position:right 14px center}
+textarea.form-input{resize:none;min-height:100px}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+
+/* ─ CARDS ─ */
+.white-card{background:var(--card);border-radius:16px;padding:16px;box-shadow:0 2px 12px rgba(0,0,0,.06);margin-bottom:12px}
+.section-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+.section-title{font-size:16px;font-weight:600;color:var(--dark)}
+.section-link{font-size:13px;color:var(--c);font-weight:500;cursor:pointer;background:none;border:none;font-family:'DM Sans',sans-serif}
+
+/* ─ PROFILE CARD ─ */
+.pcard{border-radius:20px;overflow:hidden;position:relative;box-shadow:0 8px 30px rgba(0,0,0,.12);margin-bottom:12px;cursor:pointer}
+.pcard-img{width:100%;height:260px;object-fit:cover;display:block}
+.pcard-grad{position:absolute;bottom:0;left:0;right:0;height:60%;background:linear-gradient(transparent,rgba(20,6,8,.9))}
+.pcard-info{position:absolute;bottom:14px;left:14px;right:14px;color:#fff}
+.pcard-name{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:700}
+.pcard-sub{font-size:12px;opacity:.8;margin-bottom:8px}
+.pcard-tags{display:flex;gap:6px;flex-wrap:wrap}
+.pcard-tag{background:rgba(255,255,255,.18);backdrop-filter:blur(4px);border-radius:20px;padding:3px 10px;font-size:10px}
+.pcard-badges{position:absolute;top:12px;display:flex;gap:6px;left:12px}
+.badge-match{background:linear-gradient(135deg,var(--gold),#e8c76e);color:var(--dark);
+font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px}
+.badge-verified{background:rgba(255,255,255,.9);color:#00a85a;font-size:10px;font-weight:600;padding:3px 10px;border-radius:20px}
+.badge-premium{background:linear-gradient(135deg,#7c3aed,#a855f7);color:#fff;font-size:10px;padding:3px 10px;border-radius:20px}
+
+/* ─ ACTION BTNS (Interest/Pass/etc) ─ */
+.action-row{display:flex;gap:10px;padding:10px 14px;background:var(--card);border-top:1px solid var(--border)}
+.act-btn{flex:1;padding:10px 6px;border-radius:12px;border:none;font-size:12px;font-weight:600;
+cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:4px}
+.act-btn:active{transform:scale(.95)}
+.act-interested{background:#e8f5e9;color:#2e7d32}
+.act-interested:hover{background:#2e7d32;color:#fff}
+.act-notint{background:#fff3e0;color:#e65100}
+.act-ignore{background:#fce4ec;color:#c62828}
+.act-shortlist{background:#e3f2fd;color:#1565c0}
+
+/* ─ INTEREST TAG ─ */
+.req-card{display:flex;align-items:center;gap:12px;background:var(--card);border-radius:16px;
+padding:12px 14px;margin-bottom:10px;box-shadow:0 2px 10px rgba(0,0,0,.06)}
+.req-img{width:54px;height:54px;border-radius:50%;object-fit:cover;flex-shrink:0}
+.req-info{flex:1;min-width:0}
+.req-name{font-weight:600;font-size:14px;color:var(--dark)}
+.req-detail{font-size:12px;color:var(--muted);margin-top:1px}
+.req-status{font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;white-space:nowrap}
+.status-sent{background:#e3f2fd;color:#1565c0}
+.status-received{background:#f3e5f5;color:#7b1fa2}
+.status-accepted{background:#e8f5e9;color:#2e7d32}
+.status-ignored{background:#f5f5f5;color:#999}
+
+/* ─ CHAT ─ */
+.chat-item{display:flex;align-items:center;gap:12px;padding:12px 18px;cursor:pointer;border-bottom:1px solid var(--border)}
+.chat-ava{width:50px;height:50px;border-radius:50%;object-fit:cover;flex-shrink:0;position:relative}
+.chat-online{position:absolute;bottom:1px;right:1px;width:11px;height:11px;border-radius:50%;background:#00c853;border:2px solid #fff}
+.chat-info{flex:1;min-width:0}
+.chat-name{font-weight:600;font-size:14px;color:var(--dark)}
+.chat-preview{font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chat-meta{text-align:right;flex-shrink:0}
+.chat-time{font-size:11px;color:var(--muted)}
+.chat-unread{background:var(--c);color:#fff;font-size:10px;width:18px;height:18px;border-radius:50%;
+display:flex;align-items:center;justify-content:center;margin-top:4px;margin-left:auto}
+
+/* ─ CHAT SCREEN ─ */
+#chat-screen{z-index:150}
+.chat-hdr{display:flex;align-items:center;gap:10px;padding:calc(var(--safe-t)+10px) 16px 12px;
+background:var(--card);border-bottom:1px solid var(--border);flex-shrink:0}
+.chat-hdr-ava{width:38px;height:38px;border-radius:50%;object-fit:cover}
+.chat-hdr-name{font-weight:600;color:var(--dark);font-size:15px}
+.chat-hdr-status{font-size:11px;color:#00c853}
+.chat-msgs{flex:1;overflow-y:auto;padding:12px 16px;-webkit-overflow-scrolling:touch}
+.chat-msgs::-webkit-scrollbar{display:none}
+.msg-row{display:flex;margin-bottom:10px}
+.msg-row.me{justify-content:flex-end}
+.bubble{max-width:74%;padding:9px 13px;font-size:14px;line-height:1.5;border-radius:18px}
+.bubble.me{background:linear-gradient(135deg,var(--c),var(--cr));color:#fff;border-radius:18px 18px 4px 18px}
+.bubble.them{background:#f2f0f0;color:var(--dark);border-radius:18px 18px 18px 4px}
+.msg-time{font-size:10px;opacity:.55;margin-top:3px;text-align:right}
+.chat-input-bar{display:flex;gap:8px;padding:10px 14px calc(10px + var(--safe-b));
+background:var(--card);border-top:1px solid var(--border);flex-shrink:0}
+.chat-text-input{flex:1;border:1.5px solid var(--border);border-radius:22px;padding:9px 15px;
+font-size:14px;outline:none;background:#fafafa;font-family:'DM Sans',sans-serif}
+.chat-text-input:focus{border-color:var(--rose)}
+.send-btn{width:40px;height:40px;border-radius:50%;border:none;
+background:linear-gradient(135deg,var(--c),var(--cr));color:#fff;font-size:16px;cursor:pointer;flex-shrink:0}
+
+/* ─ SETTINGS ROWS ─ */
+.setting-row{display:flex;align-items:center;gap:12px;padding:13px 0;border-bottom:1px solid var(--border);cursor:pointer}
+.setting-row:last-child{border-bottom:none}
+.setting-icon{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.setting-label{flex:1;font-size:14px;font-weight:500;color:var(--dark)}
+.setting-value{font-size:13px;color:var(--muted)}
+.setting-arrow{font-size:16px;color:#ccc}
+.toggle{width:44px;height:24px;border-radius:12px;background:#ddd;border:none;cursor:pointer;
+position:relative;transition:background .3s;flex-shrink:0}
+.toggle.on{background:var(--c)}
+.toggle::after{content:'';position:absolute;top:2px;left:2px;width:20px;height:20px;
+border-radius:50%;background:#fff;transition:transform .3s;box-shadow:0 1px 4px rgba(0,0,0,.2)}
+.toggle.on::after{transform:translateX(20px)}
+
+/* ─ RANGE SLIDER ─ */
+input[type=range]{width:100%;-webkit-appearance:none;height:4px;border-radius:2px;background:var(--border);outline:none}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:var(--c);cursor:pointer;box-shadow:0 2px 6px rgba(181,18,27,.3)}
+
+/* ─ TABS ─ */
+.tab-bar{display:flex;background:var(--card);border-bottom:1px solid var(--border);padding:0 18px;flex-shrink:0}
+.tab-item{flex:1;padding:12px 8px;text-align:center;font-size:13px;font-weight:500;color:var(--muted);
+cursor:pointer;border-bottom:2px solid transparent;transition:all .2s}
+.tab-item.active{color:var(--c);border-bottom-color:var(--c);font-weight:600}
+
+/* ─ PAYMENT ─ */
+.plan-card{border:2px solid var(--border);border-radius:16px;padding:16px;margin-bottom:12px;cursor:pointer;transition:all .2s;position:relative}
+.plan-card.selected{border-color:var(--c);background:#fff8f8}
+.plan-card.popular::before{content:'POPULAR';position:absolute;top:-10px;left:50%;transform:translateX(-50%);
+background:var(--c);color:#fff;font-size:10px;font-weight:700;padding:2px 12px;border-radius:20px}
+.plan-name{font-weight:700;font-size:16px;color:var(--dark)}
+.plan-price{font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:700;color:var(--c);margin:4px 0}
+.plan-sub{font-size:12px;color:var(--muted)}
+.plan-features{margin-top:10px;font-size:13px;color:var(--dark);line-height:1.8}
+
+/* ─ FILTER PANEL ─ */
+.filter-chip{display:inline-flex;align-items:center;padding:6px 14px;border-radius:20px;border:1.5px solid var(--border);
+font-size:12px;font-weight:500;color:var(--muted);cursor:pointer;margin:4px;background:#fff;transition:all .2s}
+.filter-chip.sel{border-color:var(--c);background:#fff8f8;color:var(--c)}
+
+/* ─ MAP PLACEHOLDER ─ */
+.map-box{background:linear-gradient(135deg,#e8f4f8,#d4edda);border-radius:14px;height:180px;
+display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;overflow:hidden;border:1.5px solid #c8e6c9}
+.map-pin{font-size:36px;animation:bounce2 2s ease infinite}
+.map-radius{position:absolute;width:120px;height:120px;border-radius:50%;border:2px dashed rgba(181,18,27,.4);
+background:rgba(181,18,27,.06);display:flex;align-items:center;justify-content:center}
+
+/* ─ ADMIN ─ */
+.admin-stat{background:var(--card);border-radius:14px;padding:14px 16px;flex:1;min-width:0;box-shadow:0 2px 10px rgba(0,0,0,.06)}
+.admin-stat-num{font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:700}
+.admin-stat-label{font-size:11px;color:var(--muted);margin-top:2px}
+.admin-row{display:flex;gap:10px;margin-bottom:10px}
+.admin-section{background:var(--card);border-radius:14px;padding:16px;margin-bottom:10px;box-shadow:0 2px 10px rgba(0,0,0,.06)}
+.admin-section-title{font-size:15px;font-weight:600;color:var(--dark);margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.user-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)}
+.user-row:last-child{border-bottom:none}
+.user-row-img{width:40px;height:40px;border-radius:50%;object-fit:cover}
+.user-row-info{flex:1;min-width:0}
+.user-row-name{font-size:14px;font-weight:600;color:var(--dark)}
+.user-row-detail{font-size:12px;color:var(--muted)}
+.status-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.status-dot.active{background:#00c853}
+.status-dot.pending{background:#ff9800}
+.status-dot.banned{background:#f44336}
+
+/* ─ ACTIVITY ─ */
+.activity-item{display:flex;align-items:flex-start;gap:12px;padding:12px 0;border-bottom:1px solid var(--border)}
+.activity-item:last-child{border-bottom:none}
+.activity-icon{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.activity-text{flex:1;font-size:13px;color:var(--dark);line-height:1.5}
+.activity-time{font-size:11px;color:var(--muted);margin-top:2px}
+
+/* ─ PROFILE VIEW ─ */
+.pv-hero{width:100%;height:300px;object-fit:cover;display:block}
+.pv-body{padding:16px 18px}
+.pv-name{font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:700;color:var(--dark)}
+.pv-badges{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0 12px}
+.pv-section{margin-bottom:16px}
+.pv-section-title{font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:8px}
+.pv-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.pv-item{background:var(--bg);border-radius:10px;padding:10px}
+.pv-item-key{font-size:11px;color:var(--muted);margin-bottom:2px}
+.pv-item-val{font-size:13px;font-weight:600;color:var(--dark)}
+.pv-photos{display:grid;grid-template-columns:repeat(3,1fr);gap:4px}
+.pv-photo{aspect-ratio:1;border-radius:8px;object-fit:cover;width:100%}
+
+/* ─ HELP ─ */
+.faq-item{border:1.5px solid var(--border);border-radius:12px;margin-bottom:8px;overflow:hidden}
+.faq-q{padding:14px 16px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;font-weight:500;font-size:14px;color:var(--dark)}
+.faq-a{padding:0 16px 14px;font-size:13px;color:var(--muted);line-height:1.7;display:none}
+.faq-a.open{display:block}
+
+/* ─ ANIMATIONS ─ */
+@keyframes fadeUp{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
+@keyframes slideUp{from{opacity:0;transform:translateY(50px)}to{opacity:1;transform:translateY(0)}}
+@keyframes slideInRight{from{transform:translateX(100%)}to{transform:translateX(0)}}
+@keyframes sheetUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+@keyframes bounce2{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+@keyframes pulse2{0%,100%{transform:scale(1)}50%{transform:scale(1.15)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes cardIn{from{opacity:0;transform:scale(.9) translateY(16px)}to{opacity:1;transform:scale(1) translateY(0)}}
+@keyframes heartPop{0%{transform:scale(1)}40%{transform:scale(1.5)}100%{transform:scale(1)}}
+@keyframes shake{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-8px)}40%,80%{transform:translateX(8px)}}
+
+/* ─ SPLASH ─ */
+#splash{background:linear-gradient(160deg,#140608 0%,#3d0a1e 50%,#B5121B 100%);align-items:center;justify-content:center}
+.splash-bg{position:absolute;inset:0;background:radial-gradient(circle at 25% 20%,rgba(255,120,138,.2) 0%,transparent 50%),radial-gradient(circle at 75% 80%,rgba(181,18,27,.3) 0%,transparent 50%)}
+.splash-content{position:relative;z-index:1;text-align:center;animation:fadeUp .8s ease}
+.splash-logo{width:96px;height:96px;border-radius:26px;background:rgba(255,255,255,.1);backdrop-filter:blur(12px);
+border:2px solid rgba(201,168,76,.4);display:flex;align-items:center;justify-content:center;
+margin:0 auto 18px;box-shadow:0 8px 32px rgba(181,18,27,.4)}
+.splash-brand{font-family:'Cormorant Garamond',serif;font-size:36px;font-weight:700;color:#fff;letter-spacing:-1px;margin-bottom:6px}
+.splash-tag{color:rgba(255,255,255,.55);font-size:13px;letter-spacing:.6px;margin-bottom:40px}
+.splash-loader{display:flex;gap:8px;justify-content:center}
+.ld{width:8px;height:8px;border-radius:50%;animation:bounce2 1s ease infinite}
+.ld:nth-child(1){background:var(--rose)}
+.ld:nth-child(2){background:var(--gold);animation-delay:.2s}
+.ld:nth-child(3){background:#fff;animation-delay:.4s}
+
+/* ─ LOGIN ─ */
+#login{background:var(--bg)}
+.login-hero{height:240px;background:linear-gradient(160deg,var(--dark),var(--c));display:flex;align-items:flex-end;
+justify-content:flex-start;padding:24px;flex-shrink:0;position:relative;overflow:hidden}
+.login-hero::before{content:'♥';position:absolute;right:30px;top:40px;font-size:100px;
+color:rgba(255,255,255,.06);font-family:'Cormorant Garamond',serif}
+.login-hero-text{color:#fff}
+.login-hero-h{font-family:'Cormorant Garamond',serif;font-size:32px;font-weight:700;line-height:1.1}
+.login-hero-s{font-size:14px;opacity:.7;margin-top:4px}
+.login-body{padding:24px 20px;flex:1;overflow-y:auto}
+.login-body::-webkit-scrollbar{display:none}
+.login-tabs{display:flex;background:var(--bg);border-radius:14px;padding:4px;margin-bottom:20px}
+.login-tab{flex:1;padding:10px;border-radius:10px;text-align:center;font-size:14px;font-weight:500;
+cursor:pointer;border:none;background:transparent;font-family:'DM Sans',sans-serif;color:var(--muted);transition:all .2s}
+.login-tab.active{background:var(--card);color:var(--dark);box-shadow:0 2px 8px rgba(0,0,0,.08);font-weight:600}
+.phone-row{display:flex;gap:8px;align-items:flex-start}
+.country-code{width:72px;padding:13px 10px;border:1.5px solid var(--border);border-radius:12px;
+font-size:15px;background:#fff;font-family:'DM Sans',sans-serif;outline:none;text-align:center}
+.or-divider{display:flex;align-items:center;gap:12px;margin:16px 0;color:var(--muted);font-size:13px}
+.or-divider::before,.or-divider::after{content:'';flex:1;height:1px;background:var(--border)}
+.social-btn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:12px;
+border-radius:12px;border:1.5px solid var(--border);background:#fff;font-size:14px;font-weight:500;
+cursor:pointer;font-family:'DM Sans',sans-serif;margin-bottom:8px}
+
+/* ─ ONBOARDING STEPS ─ */
+#register{background:var(--bg)}
+.reg-hdr{padding:calc(var(--safe-t)+12px) 18px 0;display:flex;align-items:center;gap:12px;flex-shrink:0}
+.reg-progress{flex:1;height:4px;background:var(--border);border-radius:2px;overflow:hidden}
+.reg-progress-fill{height:100%;background:var(--c);border-radius:2px;transition:width .4s ease}
+.reg-step{font-size:12px;color:var(--muted);white-space:nowrap}
+.reg-body{padding:20px 20px;flex:1;overflow-y:auto}
+.reg-body::-webkit-scrollbar{display:none}
+.reg-title{font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:700;color:var(--dark);margin-bottom:4px}
+.reg-sub{font-size:14px;color:var(--muted);margin-bottom:20px}
+.gender-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px}
+.gender-opt{border:2px solid var(--border);border-radius:14px;padding:14px 8px;text-align:center;
+cursor:pointer;transition:all .2s;background:#fff}
+.gender-opt.sel{border-color:var(--c);background:#fff8f8}
+.gender-opt .gender-emoji{font-size:28px;margin-bottom:6px}
+.gender-opt .gender-label{font-size:12px;font-weight:600;color:var(--dark)}
+.photo-upload{border:2px dashed var(--border);border-radius:16px;height:160px;display:flex;
+flex-direction:column;align-items:center;justify-content:center;cursor:pointer;transition:border .2s}
+.photo-upload:hover{border-color:var(--rose)}
+.photo-preview{width:100%;height:100%;object-fit:cover;border-radius:14px;display:none}
+</style>
+</head>
+<body>
+<div id="app">
+
+<!-- ══ SPLASH ══ -->
+<div id="splash" class="screen active">
+  <div class="splash-bg"></div>
+  <div class="splash-content">
+    <div class="splash-logo"><span style="font-family:'Cormorant Garamond',serif;font-size:32px;font-weight:900;color:#fff">J</span><span style="font-size:24px;color:var(--rose);animation:pulse2 1.5s infinite;display:inline-block">♥</span></div>
+    <div class="splash-brand">Jodi.in</div>
+    <div class="splash-tag">Where Two Hearts Begin One Story</div>
+    <div class="splash-loader"><div class="ld"></div><div class="ld"></div><div class="ld"></div></div>
+  </div>
+</div>
+
+<!-- ══ LOGIN ══ -->
+<div id="login" class="screen">
+  <div class="login-hero">
+    <div class="login-hero-text">
+      <div class="login-hero-h">Find Your<br/>Perfect Jodi</div>
+      <div class="login-hero-s">India's most trusted matrimonial app</div>
+    </div>
+  </div>
+  <div class="login-body">
+    <div class="login-tabs">
+      <button class="login-tab active" onclick="setLoginTab('login')">Sign In</button>
+      <button class="login-tab" onclick="setLoginTab('signup')">Register</button>
+    </div>
+    <div id="login-form">
+      <div class="form-group">
+        <label class="form-label">Mobile Number</label>
+        <div class="phone-row">
+          <input class="country-code" value="+91" readonly/>
+          <input class="form-input" placeholder="Enter your mobile number" type="tel" maxlength="10" style="flex:1" id="login-phone"/>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Password</label>
+        <input class="form-input" placeholder="Enter your password" type="password" id="login-pass"/>
+      </div>
+      <div style="text-align:right;margin-bottom:16px"><span style="font-size:13px;color:var(--c);cursor:pointer">Forgot Password?</span></div>
+      <button class="btn btn-red" onclick="doLogin()">Sign In</button>
+      <div class="or-divider">or continue with</div>
+      <button class="social-btn">🇬 &nbsp;Continue with Google</button>
+      <button class="social-btn">📘 Continue with Facebook</button>
+      <p style="text-align:center;font-size:12px;color:var(--muted);margin-top:16px">By continuing, you agree to our <span style="color:var(--c)">Terms of Service</span> and <span style="color:var(--c)">Privacy Policy</span></p>
+    </div>
+    <div id="signup-form" style="display:none">
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">First Name</label><input class="form-input" placeholder="First name"/></div>
+        <div class="form-group"><label class="form-label">Last Name</label><input class="form-input" placeholder="Last name"/></div>
+      </div>
+      <div class="form-group"><label class="form-label">Mobile Number</label>
+        <div class="phone-row"><input class="country-code" value="+91" readonly/><input class="form-input" placeholder="Mobile number" type="tel" style="flex:1"/></div>
+      </div>
+      <div class="form-group"><label class="form-label">Email Address</label><input class="form-input" placeholder="Email" type="email"/></div>
+      <div class="form-group"><label class="form-label">Password</label><input class="form-input" placeholder="Create password (min 8 chars)" type="password"/></div>
+      <button class="btn btn-red" style="margin-top:4px" onclick="goRegister()">Create Account & Continue →</button>
+      <div class="or-divider">or</div>
+      <button class="social-btn">🇬 &nbsp;Sign up with Google</button>
+    </div>
+    <!-- Admin Quick Access -->
+    <div style="margin-top:16px;text-align:center">
+      <span style="font-size:12px;color:var(--muted);cursor:pointer" onclick="openAdminLoginModal()">🔐 Admin Access</span>
+    </div>
+  </div>
+</div>
+
+<!-- ══ ADMIN LOGIN MODAL ══ -->
+<div id="admin-login-modal" style="display:none;position:fixed;inset:0;z-index:1000;flex-direction:column;align-items:center;justify-content:center">
+  <div style="position:absolute;inset:0;background:rgba(20,6,8,.72);backdrop-filter:blur(6px)" onclick="closeAdminLoginModal()"></div>
+  <div style="position:relative;background:#fff;border-radius:24px;padding:28px 24px;width:calc(100% - 40px);max-width:380px;box-shadow:0 24px 60px rgba(0,0,0,.3);animation:cardIn .35s ease">
+    <!-- Header -->
+    <div style="text-align:center;margin-bottom:22px">
+      <div style="width:64px;height:64px;background:linear-gradient(135deg,#1a0a10,#B5121B);border-radius:18px;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;font-size:28px">🛡️</div>
+      <div style="font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:700;color:#140608">Admin Portal</div>
+      <div style="font-size:13px;color:#9A8A8A;margin-top:4px">Jodi.in Backend Access</div>
+    </div>
+    <!-- Username -->
+    <div class="form-group">
+      <label class="form-label">Admin Username</label>
+      <div style="position:relative">
+        <span style="position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:16px">👤</span>
+        <input class="form-input" id="admin-username" placeholder="Enter admin username" style="padding-left:40px" autocomplete="off" onkeydown="if(event.key==='Enter')doAdminLogin()"/>
+      </div>
+    </div>
+    <!-- Password -->
+    <div class="form-group">
+      <label class="form-label">Password</label>
+      <div style="position:relative">
+        <span style="position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:16px">🔑</span>
+        <input class="form-input" id="admin-password" placeholder="Enter admin password" type="password" style="padding-left:40px" autocomplete="off" onkeydown="if(event.key==='Enter')doAdminLogin()"/>
+        <button onclick="toggleAdminPwd()" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;font-size:18px;cursor:pointer;color:#9A8A8A" id="admin-pwd-eye">👁</button>
+      </div>
+    </div>
+    <!-- Error msg -->
+    <div id="admin-login-err" style="display:none;background:#ffebee;color:#c62828;border-radius:10px;padding:10px 14px;font-size:13px;margin-bottom:14px;text-align:center">❌ Invalid username or password</div>
+    <!-- Login Btn -->
+    <button class="btn btn-red" onclick="doAdminLogin()" style="margin-bottom:10px">🔐 Login to Admin Panel</button>
+    <button style="width:100%;padding:12px;border-radius:14px;border:1.5px solid #F0E8E0;background:transparent;font-size:14px;color:#9A8A8A;cursor:pointer;font-family:'DM Sans',sans-serif" onclick="closeAdminLoginModal()">Cancel</button>
+    <p style="text-align:center;font-size:11px;color:#bbb;margin-top:14px">🔒 This area is restricted to authorized personnel only</p>
+  </div>
+</div>
+
+<!-- ══ REGISTER WIZARD ══ -->
+<div id="register" class="screen">
+  <div class="reg-hdr">
+    <button class="back-icon-btn" onclick="goTo('login')">←</button>
+    <div class="reg-progress"><div class="reg-progress-fill" id="reg-prog" style="width:20%"></div></div>
+    <span class="reg-step" id="reg-step-lbl">1 / 5</span>
+  </div>
+  <div class="reg-body" id="reg-body"></div>
+</div>
+
+<!-- ══ MAIN APP ══ -->
+<div id="main" class="screen">
+  <!-- TAB CONTENT -->
+  <div style="flex:1;overflow:hidden;display:flex;flex-direction:column" id="main-content"></div>
+  <!-- BOTTOM NAV -->
+  <nav class="bnav">
+    <button class="bnav-btn active" onclick="switchTab('home')" id="bnav-home"><div class="bnav-icon-wrap"><span class="bnav-icon">🏠</span></div><span class="bnav-label">Home</span></button>
+    <button class="bnav-btn" onclick="switchTab('discover')" id="bnav-discover"><div class="bnav-icon-wrap"><span class="bnav-icon">🔍</span></div><span class="bnav-label">Discover</span></button>
+    <button class="bnav-btn" onclick="switchTab('requests')" id="bnav-requests"><div class="bnav-icon-wrap"><span class="bnav-icon">💌</span><span class="bnav-badge" id="req-badge">3</span></div><span class="bnav-label">Requests</span></button>
+    <button class="bnav-btn" onclick="switchTab('messenger')" id="bnav-messenger"><div class="bnav-icon-wrap"><span class="bnav-icon">💬</span><span class="bnav-badge" id="msg-badge">2</span></div><span class="bnav-label">Chat</span></button>
+    <button class="bnav-btn" onclick="switchTab('menu')" id="bnav-menu"><div class="bnav-icon-wrap"><span class="bnav-icon">☰</span></div><span class="bnav-label">Menu</span></button>
+  </nav>
+  <!-- CHAT SCREEN OVERLAY -->
+  <div id="chat-screen" class="screen" style="z-index:150">
+    <div class="chat-hdr">
+      <button class="back-icon-btn" onclick="closeChat()">←</button>
+      <img id="cs-img" src="" class="chat-hdr-ava" alt=""/>
+      <div><div class="chat-hdr-name" id="cs-name"></div><div class="chat-hdr-status">● Online</div></div>
+      <div style="margin-left:auto;display:flex;gap:12px;font-size:20px">📞 📹</div>
+    </div>
+    <div class="chat-msgs" id="cs-msgs"></div>
+    <div class="chat-input-bar">
+      <input class="chat-text-input" id="cs-input" placeholder="Type a message…" onkeydown="if(event.key==='Enter')sendChatMsg()"/>
+      <button class="send-btn" onclick="sendChatMsg()">➤</button>
+    </div>
+  </div>
+  <!-- PROFILE VIEW OVERLAY -->
+  <div id="profile-view" class="screen panel-top" style="z-index:120;overflow-y:auto">
+    <div id="pv-content"></div>
+  </div>
+</div>
+
+<!-- ADMIN PANEL -->
+<div id="admin-panel" class="screen" style="background:var(--bg)">
+  <div class="top-bar">
+    <button class="back-icon-btn" onclick="goTo('login')">←</button>
+    <span class="top-bar-title">⚙️ Admin Dashboard</span>
+    <button class="icon-btn" onclick="showToast('Logged out')">🚪</button>
+  </div>
+  <div class="scrollable" style="padding:16px">
+    <div id="admin-content"></div>
+  </div>
+</div>
+
+<!-- FILTER PANEL (sheet) -->
+<div id="filter-panel" class="panel">
+  <div class="panel-bg" onclick="closeFilter()"></div>
+  <div class="panel-sheet">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <span style="font-size:18px;font-weight:700;color:var(--dark)">🎯 Filter Profiles</span>
+      <button onclick="closeFilter()" style="background:none;border:none;font-size:22px;cursor:pointer;color:var(--muted)">×</button>
+    </div>
+    <div id="filter-content"></div>
+    <button class="btn btn-red" onclick="applyFilter()">Apply Filters</button>
+    <button class="btn btn-outline" style="margin-top:8px" onclick="resetFilter()">Reset All</button>
+  </div>
+</div>
+
+<!-- LOCATION PANEL (sheet) -->
+<div id="location-panel" class="panel">
+  <div class="panel-bg" onclick="document.getElementById('location-panel').classList.remove('open')"></div>
+  <div class="panel-sheet">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <span style="font-size:18px;font-weight:700;color:var(--dark)">📍 Location Settings</span>
+      <button onclick="document.getElementById('location-panel').classList.remove('open')" style="background:none;border:none;font-size:22px;cursor:pointer">×</button>
+    </div>
+    <div id="location-content"></div>
+    <button class="btn btn-red" onclick="saveLocation()">Save Location Settings</button>
+  </div>
+</div>
+
+<!-- PAYMENT PANEL -->
+<div id="payment-panel" class="panel">
+  <div class="panel-bg" onclick="document.getElementById('payment-panel').classList.remove('open')"></div>
+  <div class="panel-sheet">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <span style="font-size:18px;font-weight:700;color:var(--dark)">👑 Premium Plans</span>
+      <button onclick="document.getElementById('payment-panel').classList.remove('open')" style="background:none;border:none;font-size:22px;cursor:pointer">×</button>
+    </div>
+    <div id="payment-content"></div>
+  </div>
+</div>
+
+<div id="toast"></div>
+</div><!-- /app -->
+
+<script>
+// ═══════════════════════════════════════════════════════
+//  DATA
+// ═══════════════════════════════════════════════════════
+const PROFILES = [
+  {id:1,name:"Priya Sharma",age:26,city:"Mumbai",state:"Maharashtra",profession:"Software Engineer",edu:"B.Tech, IIT Bombay",religion:"Hindu",caste:"Brahmin",height:"5'4\"",income:"8-12 LPA",gender:"female",img:"https://i.pravatar.cc/400?img=47",bio:"Passionate about travel and Bharatanatyam. Looking for a grounded, family-oriented partner.",tags:["Tech Savvy","Traveller","Dancer"],verified:true,premium:true,match:94,distance:4,online:true,marital:"Never Married",diet:"Vegetarian",motherTongue:"Hindi"},
+  {id:2,name:"Ananya Iyer",age:24,city:"Bangalore",state:"Karnataka",profession:"Doctor",edu:"MBBS, AIIMS Delhi",religion:"Hindu",caste:"Iyengar",height:"5'3\"",income:"12-20 LPA",gender:"female",img:"https://i.pravatar.cc/400?img=45",bio:"Medical professional with love for books, cooking & weekend hikes.",tags:["Doctor","Bookworm","Cook"],verified:true,premium:false,match:88,distance:12,online:true,marital:"Never Married",diet:"Vegetarian",motherTongue:"Tamil"},
+  {id:3,name:"Kavya Reddy",age:28,city:"Hyderabad",state:"Telangana",profession:"Architect",edu:"B.Arch, NIT Warangal",religion:"Hindu",caste:"Reddy",height:"5'5\"",income:"6-10 LPA",gender:"female",img:"https://i.pravatar.cc/400?img=44",bio:"Creative soul who loves art, music and weekend getaways.",tags:["Creative","Artist","Explorer"],verified:false,premium:false,match:81,distance:22,online:false,marital:"Never Married",diet:"Non-Vegetarian",motherTongue:"Telugu"},
+  {id:4,name:"Meera Nair",age:27,city:"Kochi",state:"Kerala",profession:"Finance Analyst",edu:"MBA, IIM Kozhikode",religion:"Hindu",caste:"Nair",height:"5'4\"",income:"10-15 LPA",gender:"female",img:"https://i.pravatar.cc/400?img=46",bio:"MBA grad, Mohiniyattam dancer, entrepreneur at heart.",tags:["MBA","Dancer","Ambitious"],verified:true,premium:true,match:77,distance:35,online:false,marital:"Never Married",diet:"Non-Vegetarian",motherTongue:"Malayalam"},
+  {id:5,name:"Arjun Mehta",age:29,city:"Delhi",state:"Delhi",profession:"IAS Officer",edu:"MA, St. Stephen's",religion:"Hindu",caste:"Khatri",height:"5'11\"",income:"20+ LPA",gender:"male",img:"https://i.pravatar.cc/400?img=33",bio:"Civil servant passionate about public policy and trekking.",tags:["IAS","Trekker","Intellectual"],verified:true,premium:true,match:91,distance:8,online:true,marital:"Never Married",diet:"Vegetarian",motherTongue:"Hindi"},
+  {id:6,name:"Rohan Gupta",age:30,city:"Pune",state:"Maharashtra",profession:"Entrepreneur",edu:"B.Tech, BITS Pilani",religion:"Hindu",caste:"Gupta",height:"5'9\"",income:"15-25 LPA",gender:"male",img:"https://i.pravatar.cc/400?img=35",bio:"Startup founder. Love cricket, travel and good food.",tags:["Entrepreneur","Cricketer","Traveller"],verified:true,premium:false,match:85,distance:18,online:false,marital:"Never Married",diet:"Non-Vegetarian",motherTongue:"Hindi"},
+  {id:7,name:"Zara Ahmed",age:25,city:"Mumbai",state:"Maharashtra",profession:"Fashion Designer",edu:"NIFT Mumbai",religion:"Muslim",caste:"Sunni",height:"5'5\"",income:"5-8 LPA",gender:"female",img:"https://i.pravatar.cc/400?img=41",bio:"Fashion designer with a passion for sustainable clothing.",tags:["Designer","Creative","Fashionista"],verified:true,premium:false,match:74,distance:6,online:true,marital:"Never Married",diet:"Non-Vegetarian",motherTongue:"Urdu"},
+  {id:8,name:"Simran Kaur",age:26,city:"Chandigarh",state:"Punjab",profession:"Teacher",edu:"B.Ed, Panjab University",religion:"Sikh",caste:"Jat",height:"5'4\"",income:"3-5 LPA",gender:"female",img:"https://i.pravatar.cc/400?img=49",bio:"Educator by passion, loves cooking, music and nature.",tags:["Teacher","Homely","Musical"],verified:false,premium:false,match:70,distance:45,online:false,marital:"Never Married",diet:"Vegetarian",motherTongue:"Punjabi"},
+  {id:9,name:"Vikram Singh",age:32,city:"Jaipur",state:"Rajasthan",profession:"Army Officer",edu:"NDA Graduate",religion:"Hindu",caste:"Rajput",height:"6'1\"",income:"10-15 LPA",gender:"male",img:"https://i.pravatar.cc/400?img=36",bio:"Serving officer, love for polo, fitness and patriotism.",tags:["Army","Fitness","Disciplined"],verified:true,premium:true,match:88,distance:28,online:true,marital:"Never Married",diet:"Non-Vegetarian",motherTongue:"Hindi"},
+  {id:10,name:"Pooja Jain",age:24,city:"Surat",state:"Gujarat",profession:"CA",edu:"CA Final, ICAI",religion:"Jain",caste:"Digambar",height:"5'3\"",income:"8-12 LPA",gender:"female",img:"https://i.pravatar.cc/400?img=42",bio:"Chartered Accountant, loves Garba and reading novels.",tags:["CA","Garba","Bookworm"],verified:true,premium:false,match:79,distance:15,online:false,marital:"Never Married",diet:"Vegetarian",motherTongue:"Gujarati"},
+];
+
+const ME = {name:"Rahul Kumar",age:28,city:"Mumbai",img:"https://i.pravatar.cc/80?img=12",gender:"male",
+  profession:"Software Engineer",edu:"B.Tech, Mumbai University",religion:"Hindu",height:"5'10\"",
+  income:"12-18 LPA",bio:"Software Engineer from Mumbai. Love cricket, travel, and home-cooked food.",premium:true};
+
+let currentTab = 'home';
+let likedIds = [1,2];
+let ignoredIds = [];
+let notIntIds = [];
+let sentRequests = [3,4];
+let receivedRequests = [5,6,9];
+let chatHistory = {};
+let activeChatId = null;
+let currentCardIdx = 0;
+let filterSettings = {ageMin:22,ageMax:32,heightMin:150,heightMax:175,religion:'Any',income:'Any',diet:'Any',distanceMax:50};
+let locationSettings = {city:'Mumbai',state:'Maharashtra',lat:19.076,lng:72.877,radius:50};
+let isAdmin = false;
+
+const CHAT_SEED = [
+  {from:'them',text:'Namaste! I loved your profile 😊',time:'10:30 AM'},
+  {from:'me',text:'Thank you! Yours is lovely too 🙏',time:'10:32 AM'},
+  {from:'them',text:'I see you are also from Mumbai!',time:'10:34 AM'},
+  {from:'me',text:'Yes, Andheri West. You?',time:'10:35 AM'},
+  {from:'them',text:'Bandra! Small world ✨',time:'10:37 AM'},
+];
+
+// ═══════════════════════════════════════════════════════
+//  NAVIGATION
+// ═══════════════════════════════════════════════════════
+function goTo(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+function showToast(msg,dur=2200){
+  const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),dur);
+}
+function doLogin(){
+  const ph=document.getElementById('login-phone').value;
+  if(ph.length<6){showToast('Enter a valid mobile number');return;}
+  showToast('Welcome back, Rahul! 🎉');
+  setTimeout(()=>{ goTo('main'); renderTab('home'); },600);
+}
+// ─ ADMIN CREDENTIALS ─
+const ADMIN_CREDS = { username: 'Akhilesh', password: 'Akhil@123' };
+
+function openAdminLoginModal(){
+  const modal = document.getElementById('admin-login-modal');
+  modal.style.display = 'flex';
+  document.getElementById('admin-username').value = '';
+  document.getElementById('admin-password').value = '';
+  document.getElementById('admin-login-err').style.display = 'none';
+  setTimeout(()=>document.getElementById('admin-username').focus(), 300);
+}
+function closeAdminLoginModal(){
+  document.getElementById('admin-login-modal').style.display = 'none';
+}
+function toggleAdminPwd(){
+  const inp = document.getElementById('admin-password');
+  const eye = document.getElementById('admin-pwd-eye');
+  if(inp.type === 'password'){ inp.type = 'text'; eye.textContent = '🙈'; }
+  else { inp.type = 'password'; eye.textContent = '👁'; }
+}
+function doAdminLogin(){
+  const uname = (document.getElementById('admin-username')||{}).value;
+  const pwd   = (document.getElementById('admin-password')||{}).value;
+  const errEl  = document.getElementById('admin-login-err');
+  if(!uname || !pwd){ if(errEl) errEl.style.display='block'; return; }
+  if(uname.trim() === ADMIN_CREDS.username && pwd === ADMIN_CREDS.password){
+    if(errEl) errEl.style.display = 'none';
+    closeAdminLoginModal();
+    isAdmin = true;
+    goTo('admin-panel');
+    renderAdmin();
+    showToast('✅ Welcome, ' + uname.trim() + '! Admin access granted.');
+  } else {
+    if(errEl) errEl.style.display = 'block';
+    const pwdEl = document.getElementById('admin-password');
+    if(pwdEl){ pwdEl.value = ''; pwdEl.focus(); }
+  }
+}
+function goRegister(){goTo('register');regStep=1;renderRegStep();}
+function setLoginTab(t){
+  document.querySelectorAll('.login-tab').forEach(b=>b.classList.remove('active'));
+  event.target.classList.add('active');
+  document.getElementById('login-form').style.display=t==='login'?'block':'none';
+  document.getElementById('signup-form').style.display=t==='signup'?'block':'none';
+}
+
+// ─ AUTO SPLASH ─
+setTimeout(()=>goTo('login'),2800);
+
+// ═══════════════════════════════════════════════════════
+//  REGISTER WIZARD
+// ═══════════════════════════════════════════════════════
+let regStep=1; const REG_TOTAL=5;
+const regSteps=[
+  {title:'Select Gender',sub:'Who are you looking for?'},
+  {title:'Your Details',sub:'Tell us about yourself'},
+  {title:'Partner Preference',sub:'What are you looking for?'},
+  {title:'Add Your Photo',sub:'Profiles with photos get 10x more responses'},
+  {title:'Location & Preference',sub:'Help us find matches near you'},
+];
+function renderRegStep(){
+  const pct=((regStep)/REG_TOTAL)*100;
+  document.getElementById('reg-prog').style.width=pct+'%';
+  document.getElementById('reg-step-lbl').textContent=regStep+' / '+REG_TOTAL;
+  const body=document.getElementById('reg-body');
+  const s=regSteps[regStep-1];
+  let html=`<div class="reg-title">${s.title}</div><div class="reg-sub">${s.sub}</div>`;
+  if(regStep===1){
+    html+=`<div class="gender-grid">
+      <div class="gender-opt sel" onclick="selGender(this,'male')"><div class="gender-emoji">👨</div><div class="gender-label">Male</div></div>
+      <div class="gender-opt" onclick="selGender(this,'female')"><div class="gender-emoji">👩</div><div class="gender-label">Female</div></div>
+      <div class="gender-opt" onclick="selGender(this,'other')"><div class="gender-emoji">🧑</div><div class="gender-label">Non-Binary</div></div>
+    </div>
+    <div class="form-group"><label class="form-label">Looking For</label>
+    <select class="form-input form-select"><option>Bride (Female)</option><option>Groom (Male)</option><option>Any Gender</option></select></div>`;
+  } else if(regStep===2){
+    html+=`<div class="form-group"><label class="form-label">Full Name</label><input class="form-input" placeholder="Your full name"/></div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Date of Birth</label><input class="form-input" type="date"/></div>
+      <div class="form-group"><label class="form-label">Height</label><select class="form-input form-select"><option>5'0"</option><option>5'2"</option><option>5'4"</option><option>5'6"</option><option>5'8"</option><option>5'10"</option><option>6'0"</option></select></div>
+    </div>
+    <div class="form-group"><label class="form-label">Religion</label><select class="form-input form-select"><option>Hindu</option><option>Muslim</option><option>Christian</option><option>Sikh</option><option>Jain</option><option>Buddhist</option><option>Other</option></select></div>
+    <div class="form-group"><label class="form-label">Mother Tongue</label><select class="form-input form-select"><option>Hindi</option><option>Tamil</option><option>Telugu</option><option>Kannada</option><option>Malayalam</option><option>Marathi</option><option>Bengali</option><option>Gujarati</option><option>Punjabi</option><option>Urdu</option></select></div>
+    <div class="form-group"><label class="form-label">Marital Status</label><select class="form-input form-select"><option>Never Married</option><option>Divorced</option><option>Widowed</option><option>Awaiting Divorce</option></select></div>`;
+  } else if(regStep===3){
+    html+=`<div class="form-group"><label class="form-label">Profession</label><input class="form-input" placeholder="e.g. Software Engineer"/></div>
+    <div class="form-group"><label class="form-label">Education</label><input class="form-input" placeholder="e.g. B.Tech, IIT Bombay"/></div>
+    <div class="form-group"><label class="form-label">Annual Income</label><select class="form-input form-select"><option>Below 3 LPA</option><option>3-5 LPA</option><option>5-8 LPA</option><option>8-12 LPA</option><option>12-20 LPA</option><option>20+ LPA</option></select></div>
+    <div class="form-group"><label class="form-label">Diet</label><select class="form-input form-select"><option>Vegetarian</option><option>Non-Vegetarian</option><option>Eggetarian</option><option>Vegan</option></select></div>
+    <div class="form-group"><label class="form-label">About Me</label><textarea class="form-input" placeholder="Write something about yourself…"></textarea></div>`;
+  } else if(regStep===4){
+    html+=`<div class="photo-upload" id="photo-upload-box" onclick="triggerPhotoUpload()">
+      <img id="photo-preview" class="photo-preview"/>
+      <div id="photo-placeholder" style="text-align:center">
+        <div style="font-size:40px;margin-bottom:8px">📸</div>
+        <div style="font-size:14px;font-weight:600;color:var(--dark)">Tap to upload photo</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:4px">JPG, PNG up to 5MB</div>
+      </div>
+    </div>
+    <input type="file" id="photo-file-input" accept="image/*" style="display:none" onchange="previewPhoto(this)"/>
+    <div style="margin-top:16px;font-size:13px;color:var(--muted);text-align:center">✨ Tip: Profiles with clear face photos get 10x more attention</div>`;
+  } else if(regStep===5){
+    html+=`<div class="form-group"><label class="form-label">Your City</label><input class="form-input" placeholder="City" value="Mumbai"/></div>
+    <div class="form-group"><label class="form-label">Your State</label><select class="form-input form-select"><option>Maharashtra</option><option>Delhi</option><option>Karnataka</option><option>Tamil Nadu</option><option>Telangana</option><option>Kerala</option><option>Gujarat</option><option>Rajasthan</option><option>Punjab</option><option>West Bengal</option></select></div>
+    <div class="form-group">
+      <label class="form-label">Search Radius — <span id="radius-val-reg">50 km</span></label>
+      <input type="range" min="10" max="500" value="50" oninput="document.getElementById('radius-val-reg').textContent=this.value+' km'"/>
+    </div>
+    <div class="form-group"><label class="form-label">Partner Age Range</label>
+      <div class="form-row">
+        <input class="form-input" placeholder="Min age" type="number" value="22"/>
+        <input class="form-input" placeholder="Max age" type="number" value="32"/>
+      </div>
+    </div>`;
+  }
+  html+=`<div style="display:flex;gap:10px;margin-top:20px;padding-bottom:20px">
+    ${regStep>1?`<button class="btn btn-outline" style="flex:1" onclick="regStep--;renderRegStep()">← Back</button>`:''}
+    <button class="btn btn-red" style="flex:2" onclick="${regStep<REG_TOTAL?'regStep++;renderRegStep()':'completeReg()'}">
+      ${regStep<REG_TOTAL?'Continue →':'Complete Registration 🎉'}</button>
+  </div>`;
+  body.innerHTML=html;
+}
+function selGender(el,g){document.querySelectorAll('.gender-opt').forEach(o=>o.classList.remove('sel'));el.classList.add('sel');}
+function triggerPhotoUpload(){document.getElementById('photo-file-input').click();}
+function previewPhoto(inp){
+  const file=inp.files[0];if(!file)return;
+  const url=URL.createObjectURL(file);
+  document.getElementById('photo-preview').src=url;
+  document.getElementById('photo-preview').style.display='block';
+  document.getElementById('photo-placeholder').style.display='none';
+}
+function completeReg(){showToast('Profile created! Welcome to Jodi.in 🎉');setTimeout(()=>{goTo('main');renderTab('home');},800);}
+
+// ═══════════════════════════════════════════════════════
+//  MAIN TABS
+// ═══════════════════════════════════════════════════════
+function switchTab(tab){
+  currentTab=tab;
+  document.querySelectorAll('.bnav-btn').forEach(b=>b.classList.remove('active'));
+  const btn=document.getElementById('bnav-'+tab);if(btn)btn.classList.add('active');
+  renderTab(tab);
+}
+function renderTab(tab){
+  const mc=document.getElementById('main-content');
+  mc.innerHTML='';
+  if(tab==='home') renderHome(mc);
+  else if(tab==='discover') renderDiscover(mc);
+  else if(tab==='requests') renderRequests(mc);
+  else if(tab==='messenger') renderMessenger(mc);
+  else if(tab==='menu') renderMenu(mc);
+  else if(tab==='activity') renderActivity(mc);
+  else if(tab==='profile') renderMyProfile(mc);
+  else if(tab==='edit-profile') renderEditProfile(mc);
+  else if(tab==='settings') renderSettings(mc);
+  else if(tab==='privacy') renderPrivacy(mc);
+  else if(tab==='help') renderHelp(mc);
+  else if(tab==='location') openLocationPanel();
+}
+
+// ═══════════════════════════════════════════════════════
+//  HOME
+// ═══════════════════════════════════════════════════════
+function renderHome(mc){
+  const visibleProfiles=PROFILES.filter(p=>!ignoredIds.includes(p.id));
+  mc.innerHTML=`
+  <div class="top-bar">
+    <div style="flex:1">
+      <div style="font-size:12px;color:var(--muted)">Good Morning 🌸</div>
+      <div style="font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:700;color:var(--dark)">${ME.name}</div>
+    </div>
+    <button class="icon-btn" onclick="openLocationPanel()">📍</button>
+    <button class="icon-btn" onclick="openFilter()">🎚</button>
+    <button class="icon-btn" style="position:relative" onclick="switchTab('activity')">🔔<span style="position:absolute;top:4px;right:4px;width:8px;height:8px;background:var(--c);border-radius:50%;border:1.5px solid #fff"></span></button>
+    <img src="${ME.img}" style="width:36px;height:36px;border-radius:50%;border:2px solid var(--gold);object-fit:cover;cursor:pointer" onclick="switchTab('profile')"/>
+  </div>
+  <div class="scrollable" style="padding:14px 16px 100px">
+    <!-- Stats -->
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:16px">
+      ${[['47','Visitors','#fff3e0','#e65100'],['12','Sent','#e3f2fd','#1565c0'],['3','Received','#f3e5f5','#7b1fa2'],['5','Matches','#e8f5e9','#2e7d32']].map(([n,l,bg,col])=>`
+      <div style="background:${bg};border-radius:12px;padding:10px 8px;text-align:center">
+        <div style="font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:700;color:${col}">${n}</div>
+        <div style="font-size:10px;color:${col};opacity:.8">${l}</div>
+      </div>`).join('')}
+    </div>
+    <!-- Premium Banner -->
+    ${!ME.premium?`<div style="background:linear-gradient(135deg,#7c3aed,#a855f7);border-radius:16px;padding:14px 16px;margin-bottom:14px;display:flex;align-items:center;gap:12px;cursor:pointer" onclick="openPayment()">
+      <span style="font-size:28px">👑</span>
+      <div style="color:#fff;flex:1"><div style="font-weight:700;font-size:14px">Upgrade to Premium</div><div style="font-size:12px;opacity:.8">Get unlimited matches & more</div></div>
+      <span style="color:#fff;font-size:18px">→</span>
+    </div>`:''}
+    <!-- Today's Pick -->
+    <div style="font-size:13px;font-weight:600;color:var(--muted);margin-bottom:10px">✨ Today's Top Matches</div>
+    ${visibleProfiles.slice(0,PROFILES.length).map(p=>renderProfileCardHTML(p)).join('')}
+  </div>`;
+}
+
+function renderProfileCardHTML(p){
+  const isSent=sentRequests.includes(p.id);
+  const isLiked=likedIds.includes(p.id);
+  return `<div style="margin-bottom:14px;animation:cardIn .4s ease">
+    <div class="pcard" onclick="openProfileView(${p.id})">
+      <img src="${p.img}" class="pcard-img" alt="${p.name}"/>
+      <div class="pcard-grad"></div>
+      <div class="pcard-badges">
+        <span class="badge-match">${p.match}% Match</span>
+        ${p.verified?'<span class="badge-verified">✓ Verified</span>':''}
+        ${p.premium?'<span class="badge-premium">👑 Premium</span>':''}
+      </div>
+      <div class="pcard-info">
+        <div class="pcard-name">${p.name}, ${p.age}</div>
+        <div class="pcard-sub">📍 ${p.city}, ${p.state} · ${p.distance} km · ${p.profession}</div>
+        <div class="pcard-tags">${p.tags.map(t=>`<span class="pcard-tag">${t}</span>`).join('')}</div>
+      </div>
+    </div>
+    <div class="action-row">
+      <button class="act-btn act-ignore" onclick="ignoreProfile(${p.id})">✕ Ignore</button>
+      <button class="act-btn act-notint" onclick="notInterested(${p.id})">👎 Not Int.</button>
+      <button class="act-btn act-shortlist" onclick="shortlistProfile(${p.id})">⭐ Save</button>
+      <button class="act-btn act-interested ${isSent?'act-accepted':''}" id="int-btn-${p.id}" onclick="sendInterest(${p.id})">
+        ${isSent?'✓ Sent':'💌 Interest'}</button>
+    </div>
+  </div>`;
+}
+
+function ignoreProfile(id){
+  ignoredIds.push(id);
+  const el=document.querySelector(`[onclick="ignoreProfile(${id})"]`);
+  if(el){const card=el.closest('[style*="animation"]');if(card){card.style.opacity='0';card.style.transform='translateX(-100%)';card.style.transition='all .4s';setTimeout(()=>card.remove(),400);}}
+  showToast('Profile ignored');
+}
+function notInterested(id){
+  notIntIds.push(id);
+  showToast('Marked as not interested');
+  const el=document.querySelector(`[onclick="notInterested(${id})"]`);
+  if(el){const card=el.closest('[style*="animation"]');if(card){card.style.opacity='0';card.style.transition='opacity .4s';setTimeout(()=>card.remove(),400);}}
+}
+function shortlistProfile(id){showToast('⭐ Profile saved to shortlist!');}
+function sendInterest(id){
+  if(sentRequests.includes(id)){showToast('Request already sent');return;}
+  sentRequests.push(id);
+  const btn=document.getElementById('int-btn-'+id);
+  if(btn){btn.textContent='✓ Sent';btn.classList.remove('act-interested');btn.classList.add('act-accepted',);}
+  document.getElementById('req-badge').textContent=sentRequests.length;
+  showToast('💌 Interest sent successfully!');
+}
+
+// ═══════════════════════════════════════════════════════
+//  DISCOVER
+// ═══════════════════════════════════════════════════════
+function renderDiscover(mc){
+  mc.innerHTML=`
+  <div class="top-bar">
+    <span class="top-bar-title">🔍 Discover</span>
+    <button class="icon-btn" onclick="openFilter()">🎚 Filter</button>
+    <button class="icon-btn" onclick="openLocationPanel()">📍</button>
+  </div>
+  <div style="padding:12px 16px 8px;flex-shrink:0">
+    <div style="display:flex;align-items:center;background:#fff;border-radius:14px;padding:10px 14px;border:1.5px solid var(--border);gap:10px">
+      <span style="font-size:18px">🔍</span>
+      <input style="flex:1;border:none;outline:none;font-size:14px;font-family:'DM Sans',sans-serif;background:transparent" placeholder="Search by name, city, profession…" oninput="filterDiscover(this.value)" id="disc-search"/>
+    </div>
+    <!-- Quick Filters -->
+    <div style="display:flex;gap:8px;overflow-x:auto;padding:10px 0 4px;scrollbar-width:none">
+      ${['All','Mumbai','Delhi','Doctor','Engineer','Sikh','Muslim','Hindu'].map((f,i)=>`<span class="filter-chip ${i===0?'sel':''}" onclick="filterDiscoverTag('${f}',this)">${f}</span>`).join('')}
+    </div>
+  </div>
+  <div class="scrollable" style="padding:0 16px 100px" id="disc-grid">
+    ${renderDiscoverGrid(PROFILES)}
+  </div>`;
+}
+function renderDiscoverGrid(profiles){
+  return `<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+    ${profiles.map(p=>`
+    <div style="border-radius:16px;overflow:hidden;position:relative;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.1)" onclick="openProfileView(${p.id})">
+      <img src="${p.img}" style="width:100%;height:190px;object-fit:cover;display:block"/>
+      <div style="position:absolute;bottom:0;left:0;right:0;height:55%;background:linear-gradient(transparent,rgba(20,6,8,.88))"></div>
+      ${p.verified?'<div style="position:absolute;top:8px;left:8px;background:#00c853;color:#fff;border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700">✓</div>':''}
+      <div style="position:absolute;top:8px;right:8px;background:rgba(0,0,0,.4);border-radius:10px;padding:2px 8px;font-size:11px;font-weight:700;color:#fff">${p.match}%</div>
+      <div style="position:absolute;bottom:22px;left:10px;right:10px;color:#fff">
+        <div style="font-weight:700;font-size:13px">${p.name.split(' ')[0]}, ${p.age}</div>
+        <div style="font-size:10px;opacity:.8">${p.city}</div>
+      </div>
+      <button style="position:absolute;bottom:8px;right:8px;background:${sentRequests.includes(p.id)?'var(--c)':'rgba(255,255,255,.25)'};border:none;border-radius:50%;width:28px;height:28px;color:#fff;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center" onclick="event.stopPropagation();sendInterest(${p.id})">${sentRequests.includes(p.id)?'✓':'♥'}</button>
+    </div>`).join('')}
+  </div>`;
+}
+function filterDiscover(q){
+  const filtered=PROFILES.filter(p=>p.name.toLowerCase().includes(q.toLowerCase())||p.city.toLowerCase().includes(q.toLowerCase())||p.profession.toLowerCase().includes(q.toLowerCase()));
+  document.getElementById('disc-grid').innerHTML=renderDiscoverGrid(filtered);
+}
+function filterDiscoverTag(tag,el){
+  document.querySelectorAll('.filter-chip').forEach(c=>c.classList.remove('sel'));
+  el.classList.add('sel');
+  const filtered=tag==='All'?PROFILES:PROFILES.filter(p=>p.city===tag||p.religion===tag||p.profession.includes(tag));
+  document.getElementById('disc-grid').innerHTML=renderDiscoverGrid(filtered);
+}
+
+// ═══════════════════════════════════════════════════════
+//  REQUESTS
+// ═══════════════════════════════════════════════════════
+let reqTab='received';
+function renderRequests(mc){
+  mc.innerHTML=`
+  <div class="top-bar"><span class="top-bar-title">💌 Requests</span></div>
+  <div class="tab-bar">
+    <div class="tab-item ${reqTab==='received'?'active':''}" onclick="setReqTab('received')">Received (${receivedRequests.length})</div>
+    <div class="tab-item ${reqTab==='sent'?'active':''}" onclick="setReqTab('sent')">Sent (${sentRequests.length})</div>
+    <div class="tab-item ${reqTab==='shortlist'?'active':''}" onclick="setReqTab('shortlist')">Shortlist</div>
+  </div>
+  <div class="scrollable" style="padding:12px 16px 100px" id="req-list">
+    ${renderReqList()}
+  </div>`;
+}
+function setReqTab(t){reqTab=t;document.querySelectorAll('.tab-item').forEach((el,i)=>{el.classList.toggle('active',['received','sent','shortlist'][i]===t)});document.getElementById('req-list').innerHTML=renderReqList();}
+function renderReqList(){
+  let ids=reqTab==='received'?receivedRequests:reqTab==='sent'?sentRequests:likedIds;
+  if(!ids.length)return`<div style="text-align:center;padding:60px 20px;color:var(--muted)"><div style="font-size:48px;margin-bottom:12px">${reqTab==='received'?'💌':reqTab==='sent'?'📤':'⭐'}</div><div style="font-size:16px;font-weight:600">No ${reqTab} requests</div></div>`;
+  return ids.map(id=>{
+    const p=PROFILES.find(x=>x.id===id);if(!p)return'';
+    const isReceived=reqTab==='received';
+    return`<div class="req-card">
+      <img src="${p.img}" class="req-img" onclick="openProfileView(${p.id})" style="cursor:pointer"/>
+      <div class="req-info">
+        <div class="req-name">${p.name}, ${p.age}</div>
+        <div class="req-detail">${p.profession} · ${p.city}</div>
+        <div class="req-detail" style="margin-top:2px">${p.religion} · ${p.height} · ${p.edu.split(',')[0]}</div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:6px;flex-shrink:0">
+        ${isReceived?`
+          <button class="btn btn-sm" style="background:var(--c);color:#fff;border:none;cursor:pointer" onclick="acceptRequest(${p.id})">✓ Accept</button>
+          <button class="btn btn-sm" style="background:#fce4ec;color:#c62828;border:none;cursor:pointer" onclick="rejectRequest(${p.id})">✕ Decline</button>
+        `:`<span class="req-status status-sent">Sent</span>
+          <button class="btn btn-sm btn-outline" style="font-size:12px;border-radius:10px;border:1.5px solid var(--c);background:transparent;color:var(--c);cursor:pointer;padding:6px 10px" onclick="openChat(${p.id})">💬 Chat</button>`}
+      </div>
+    </div>`;
+  }).join('');
+}
+function acceptRequest(id){
+  receivedRequests=receivedRequests.filter(x=>x!==id);
+  likedIds.push(id);
+  document.getElementById('req-list').innerHTML=renderReqList();
+  showToast('✅ Request accepted! You can now chat.');
+  document.getElementById('req-badge').textContent=receivedRequests.length||'';
+}
+function rejectRequest(id){
+  receivedRequests=receivedRequests.filter(x=>x!==id);
+  document.getElementById('req-list').innerHTML=renderReqList();
+  showToast('Request declined');
+  document.getElementById('req-badge').textContent=receivedRequests.length||'';
+}
+
+// ═══════════════════════════════════════════════════════
+//  MESSENGER
+// ═══════════════════════════════════════════════════════
+function renderMessenger(mc){
+  const chatProfiles=[...likedIds,...sentRequests].filter((v,i,a)=>a.indexOf(v)===i).map(id=>PROFILES.find(p=>p.id===id)).filter(Boolean);
+  mc.innerHTML=`
+  <div class="top-bar"><span class="top-bar-title">💬 Messages</span></div>
+  <div style="padding:10px 16px 6px;flex-shrink:0">
+    <div style="display:flex;align-items:center;background:#fff;border-radius:12px;padding:9px 14px;border:1.5px solid var(--border);gap:8px">
+      <span style="font-size:16px">🔍</span>
+      <input style="flex:1;border:none;outline:none;font-size:14px;font-family:'DM Sans',sans-serif;background:transparent" placeholder="Search messages…"/>
+    </div>
+  </div>
+  <div class="scrollable" style="padding-bottom:100px">
+    ${chatProfiles.length===0?`<div style="text-align:center;padding:60px 20px;color:var(--muted)"><div style="font-size:48px">💬</div><div style="margin-top:12px;font-size:15px;font-weight:600">No conversations yet</div><div style="font-size:13px;margin-top:6px">Accept requests or send interests to start chatting</div></div>`:''}
+    ${chatProfiles.map(p=>`
+    <div class="chat-item" onclick="openChat(${p.id})">
+      <div style="position:relative">
+        <img src="${p.img}" class="chat-ava" alt="${p.name}" style="width:50px;height:50px;border-radius:50%;object-fit:cover"/>
+        ${p.online?'<div class="chat-online"></div>':''}
+      </div>
+      <div class="chat-info">
+        <div class="chat-name">${p.name}</div>
+        <div class="chat-preview">${chatHistory[p.id]?chatHistory[p.id].slice(-1)[0].text:'Tap to start chatting ✨'}</div>
+      </div>
+      <div class="chat-meta">
+        <div class="chat-time">10:37 AM</div>
+        ${!chatHistory[p.id]?'<div class="chat-unread">1</div>':''}
+      </div>
+    </div>`).join('')}
+  </div>`;
+}
+function openChat(id){
+  const p=PROFILES.find(x=>x.id===id);if(!p)return;
+  activeChatId=id;
+  if(!chatHistory[id])chatHistory[id]=[...CHAT_SEED];
+  document.getElementById('cs-img').src=p.img;
+  document.getElementById('cs-name').textContent=p.name;
+  renderChatMessages();
+  document.getElementById('chat-screen').classList.add('active');
+  document.getElementById('msg-badge').style.display='none';
+}
+function closeChat(){document.getElementById('chat-screen').classList.remove('active');}
+function renderChatMessages(){
+  const msgs=chatHistory[activeChatId]||[];
+  const wrap=document.getElementById('cs-msgs');
+  wrap.innerHTML=msgs.map(m=>`<div class="msg-row ${m.from}"><div class="bubble ${m.from}">${m.text}<div class="msg-time">${m.time}</div></div></div>`).join('');
+  wrap.scrollTop=wrap.scrollHeight;
+}
+function sendChatMsg(){
+  const inp=document.getElementById('cs-input');
+  const txt=inp.value.trim();if(!txt)return;
+  if(!chatHistory[activeChatId])chatHistory[activeChatId]=[];
+  const now=new Date();
+  chatHistory[activeChatId].push({from:'me',text:txt,time:now.getHours()+':'+String(now.getMinutes()).padStart(2,'0')});
+  inp.value='';renderChatMessages();
+}
+
+// ═══════════════════════════════════════════════════════
+//  PROFILE VIEW
+// ═══════════════════════════════════════════════════════
+function openProfileView(id){
+  const p=PROFILES.find(x=>x.id===id);if(!p)return;
+  const isSent=sentRequests.includes(p.id);
+  document.getElementById('pv-content').innerHTML=`
+  <div style="position:sticky;top:0;z-index:5;display:flex;align-items:center;gap:10px;padding:calc(var(--safe-t)+10px) 16px 10px;background:rgba(255,255,255,.95);backdrop-filter:blur(8px);border-bottom:1px solid var(--border)">
+    <button class="back-icon-btn" onclick="document.getElementById('profile-view').classList.remove('active')">←</button>
+    <span style="font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:700;color:var(--dark);flex:1">${p.name}'s Profile</span>
+    <button class="icon-btn" onclick="openChat(${p.id})">💬</button>
+    <button class="icon-btn" onclick="shortlistProfile(${p.id})">⭐</button>
+  </div>
+  <img src="${p.img}" class="pv-hero"/>
+  <div class="pv-body">
+    <div class="pv-name">${p.name}, ${p.age}</div>
+    <div class="pv-badges">
+      ${p.verified?'<span class="badge-verified" style="background:#e8f5e9;color:#2e7d32;font-size:12px;padding:4px 12px;border-radius:20px">✓ Verified</span>':''}
+      ${p.premium?'<span style="background:linear-gradient(135deg,#7c3aed,#a855f7);color:#fff;font-size:12px;padding:4px 12px;border-radius:20px">👑 Premium</span>':''}
+      <span style="background:#e3f2fd;color:#1565c0;font-size:12px;padding:4px 12px;border-radius:20px">${p.match}% Match</span>
+    </div>
+    <p style="font-size:14px;color:var(--muted);line-height:1.7;margin-bottom:16px">${p.bio}</p>
+    <div class="pv-section">
+      <div class="pv-section-title">Basic Details</div>
+      <div class="pv-grid">
+        ${[['📍 Location',`${p.city}, ${p.state}`],['🎂 Age',`${p.age} years`],['📏 Height',p.height],['💍 Marital Status',p.marital],['🙏 Religion',p.religion],['🍽 Diet',p.diet],['🗣 Mother Tongue',p.motherTongue],['📏 Distance',`${p.distance} km away`]].map(([k,v])=>`
+        <div class="pv-item"><div class="pv-item-key">${k}</div><div class="pv-item-val">${v}</div></div>`).join('')}
+      </div>
+    </div>
+    <div class="pv-section">
+      <div class="pv-section-title">Education & Career</div>
+      <div class="pv-grid">
+        ${[['🎓 Education',p.edu],['💼 Profession',p.profession],['💰 Income',p.income]].map(([k,v])=>`
+        <div class="pv-item"><div class="pv-item-key">${k}</div><div class="pv-item-val">${v}</div></div>`).join('')}
+      </div>
+    </div>
+    <div class="pv-section">
+      <div class="pv-section-title">Photos</div>
+      <div class="pv-photos">
+        ${[1,2,3].map(i=>`<img src="${p.img.replace('400','300')}?rand=${i}" class="pv-photo" alt="photo"/>`).join('')}
+      </div>
+    </div>
+    <div style="padding:16px 0;display:flex;gap:10px">
+      <button class="act-btn act-ignore" style="flex:1;padding:12px" onclick="ignoreProfile(${p.id});document.getElementById('profile-view').classList.remove('active')">✕ Ignore</button>
+      <button class="act-btn act-notint" style="flex:1;padding:12px" onclick="notInterested(${p.id});document.getElementById('profile-view').classList.remove('active')">👎 Not Int.</button>
+      <button class="btn btn-red btn-sm" style="flex:2;border-radius:12px;padding:12px" onclick="${isSent?'showToast(\'Already sent\')':'sendInterest('+p.id+')'}">${isSent?'✓ Sent':'💌 Send Interest'}</button>
+    </div>
+  </div>`;
+  document.getElementById('profile-view').classList.add('active');
+  document.getElementById('profile-view').scrollTop=0;
+}
+
+// ═══════════════════════════════════════════════════════
+//  MENU
+// ═══════════════════════════════════════════════════════
+function renderMenu(mc){
+  mc.innerHTML=`
+  <div class="top-bar"><span class="top-bar-title">☰ Menu</span></div>
+  <div class="scrollable" style="padding:16px 16px 100px">
+    <!-- My Profile Card -->
+    <div style="background:linear-gradient(135deg,var(--dark),var(--c));border-radius:18px;padding:18px;margin-bottom:16px;display:flex;align-items:center;gap:14px;cursor:pointer" onclick="switchTab('profile')">
+      <img src="${ME.img}" style="width:56px;height:56px;border-radius:50%;border:3px solid var(--gold);object-fit:cover"/>
+      <div style="color:#fff;flex:1">
+        <div style="font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:700">${ME.name}</div>
+        <div style="font-size:12px;opacity:.75">${ME.profession} · ${ME.city}</div>
+        <div style="display:flex;align-items:center;gap:8px;margin-top:6px">
+          <div style="background:rgba(255,255,255,.15);border-radius:6px;height:6px;flex:1;overflow:hidden"><div style="width:72%;height:100%;background:var(--gold)"></div></div>
+          <span style="font-size:11px;opacity:.8">72% complete</span>
+        </div>
+      </div>
+      <span style="color:rgba(255,255,255,.6);font-size:20px">›</span>
+    </div>
+    <!-- Menu Items -->
+    ${[
+      ['My Profile','👤','profile','View and manage your profile'],
+      ['Edit Profile','✏️','edit-profile','Update your details'],
+      ['Activity','📊','activity','See who viewed your profile'],
+      ['Account Settings','⚙️','settings','Manage your account'],
+      ['Privacy Settings','🔒','privacy','Control your visibility'],
+      ['Location Settings','📍','location','Set search radius'],
+      ['Premium Plans','👑','payment','Upgrade for more features'],
+      ['Help & Support','❓','help','FAQs and contact us'],
+    ].map(([label,icon,tab,sub])=>`
+    <div class="setting-row" onclick="switchTab('${tab}');${tab==='payment'?'openPayment()':''}">
+      <div class="setting-icon" style="background:var(--bg)">${icon}</div>
+      <div style="flex:1"><div class="setting-label">${label}</div><div style="font-size:11px;color:var(--muted)">${sub}</div></div>
+      <span class="setting-arrow">›</span>
+    </div>`).join('')}
+    <div class="setting-row" style="color:#e53935" onclick="showToast('Logged out');setTimeout(()=>goTo('login'),600)">
+      <div class="setting-icon" style="background:#ffebee">🚪</div>
+      <div class="setting-label" style="color:#e53935">Logout</div>
+    </div>
+  </div>`;
+}
+
+// ═══════════════════════════════════════════════════════
+//  ACTIVITY
+// ═══════════════════════════════════════════════════════
+function renderActivity(mc){
+  const activities=[
+    {icon:'👁',bg:'#e3f2fd',text:'<b>Priya Sharma</b> viewed your profile',time:'2 min ago'},
+    {icon:'💌',bg:'#f3e5f5',text:'<b>Arjun Mehta</b> sent you an interest request',time:'15 min ago'},
+    {icon:'⭐',bg:'#fff8e1',text:'<b>Ananya Iyer</b> shortlisted your profile',time:'1 hr ago'},
+    {icon:'✅',bg:'#e8f5e9',text:'Your interest to <b>Kavya Reddy</b> was accepted',time:'3 hrs ago'},
+    {icon:'👁',bg:'#e3f2fd',text:'<b>Meera Nair</b> viewed your profile',time:'5 hrs ago'},
+    {icon:'💬',bg:'#fce4ec',text:'New message from <b>Priya Sharma</b>',time:'Yesterday'},
+    {icon:'🎉',bg:'#f3e5f5',text:'You have a new <b>94% match</b> — Priya Sharma',time:'Yesterday'},
+    {icon:'👁',bg:'#e3f2fd',text:'<b>Simran Kaur</b> viewed your profile',time:'2 days ago'},
+    {icon:'💌',bg:'#f3e5f5',text:'<b>Vikram Singh</b> sent you an interest request',time:'2 days ago'},
+    {icon:'✏️',bg:'#fff8e1',text:'Your profile was verified by admin ✓',time:'3 days ago'},
+  ];
+  mc.innerHTML=`
+  <div class="top-bar">
+    <button class="back-icon-btn" onclick="switchTab('menu')">←</button>
+    <span class="top-bar-title">📊 Activity</span>
+  </div>
+  <div class="scrollable" style="padding:16px 16px 100px">
+    <div class="white-card">
+      ${activities.map(a=>`
+      <div class="activity-item">
+        <div class="activity-icon" style="background:${a.bg}">${a.icon}</div>
+        <div style="flex:1">
+          <div class="activity-text">${a.text}</div>
+          <div class="activity-time">${a.time}</div>
+        </div>
+      </div>`).join('')}
+    </div>
+  </div>`;
+}
+
+// ═══════════════════════════════════════════════════════
+//  MY PROFILE
+// ═══════════════════════════════════════════════════════
+function renderMyProfile(mc){
+  mc.innerHTML=`
+  <div class="top-bar">
+    <button class="back-icon-btn" onclick="switchTab('menu')">←</button>
+    <span class="top-bar-title">👤 My Profile</span>
+    <button class="icon-btn" onclick="switchTab('edit-profile')">✏️</button>
+  </div>
+  <div class="scrollable" style="padding-bottom:100px">
+    <div style="position:relative">
+      <div style="height:180px;background:linear-gradient(135deg,var(--dark),var(--c))"></div>
+      <div style="position:absolute;bottom:-40px;left:50%;transform:translateX(-50%)">
+        <img src="${ME.img}" style="width:90px;height:90px;border-radius:50%;border:4px solid #fff;object-fit:cover;display:block"/>
+        <div style="position:absolute;bottom:2px;right:2px;width:26px;height:26px;background:var(--c);border-radius:50%;border:2px solid #fff;display:flex;align-items:center;justify-content:center;font-size:12px;cursor:pointer" onclick="switchTab('edit-profile')">✏️</div>
+      </div>
+    </div>
+    <div style="padding:52px 18px 0;text-align:center">
+      <div style="font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:700;color:var(--dark)">${ME.name}, ${ME.age}</div>
+      <div style="font-size:13px;color:var(--muted);margin-bottom:16px">📍 ${ME.city} · ${ME.profession}</div>
+      <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-bottom:16px">
+        ${ME.premium?'<span style="background:linear-gradient(135deg,#7c3aed,#a855f7);color:#fff;font-size:12px;padding:4px 12px;border-radius:20px">👑 Premium</span>':''}
+        <span style="background:#e8f5e9;color:#2e7d32;font-size:12px;padding:4px 12px;border-radius:20px">✓ Verified</span>
+      </div>
+    </div>
+    <div style="padding:0 16px">
+      <div class="white-card">
+        <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+          <span style="font-size:13px;color:var(--muted)">Profile Completion</span>
+          <span style="font-size:13px;color:var(--c);font-weight:600">72%</span>
+        </div>
+        <div style="height:8px;background:var(--border);border-radius:4px;overflow:hidden">
+          <div style="width:72%;height:100%;background:linear-gradient(90deg,var(--c),var(--rose));border-radius:4px"></div>
+        </div>
+        <div style="font-size:12px;color:var(--muted);margin-top:8px">Add more photos and details to increase your visibility</div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:12px">
+        ${[['47','Profile Visits'],['12','Interests Sent'],['5','Matches']].map(([n,l])=>`
+        <div class="white-card" style="text-align:center;padding:12px 8px">
+          <div style="font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:700;color:var(--c)">${n}</div>
+          <div style="font-size:11px;color:var(--muted)">${l}</div>
+        </div>`).join('')}
+      </div>
+      <div class="white-card">
+        <div class="pv-section-title" style="margin-bottom:10px">About Me</div>
+        <p style="font-size:13px;color:var(--muted);line-height:1.7">${ME.bio}</p>
+      </div>
+      <div class="white-card">
+        <div class="pv-section-title" style="margin-bottom:10px">Details</div>
+        ${[['Religion',ME.religion],['Height',ME.height],['Education',ME.edu],['Profession',ME.profession],['Income',ME.income]].map(([k,v])=>`
+        <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)">
+          <span style="font-size:13px;color:var(--muted)">${k}</span>
+          <span style="font-size:13px;font-weight:500;color:var(--dark)">${v}</span>
+        </div>`).join('')}
+      </div>
+      <button class="btn btn-red" onclick="switchTab('edit-profile')">✏️ Edit Profile</button>
+    </div>
+  </div>`;
+}
+
+// ═══════════════════════════════════════════════════════
+//  EDIT PROFILE
+// ═══════════════════════════════════════════════════════
+function renderEditProfile(mc){
+  mc.innerHTML=`
+  <div class="top-bar">
+    <button class="back-icon-btn" onclick="switchTab('profile')">←</button>
+    <span class="top-bar-title">✏️ Edit Profile</span>
+    <button class="icon-btn" style="background:var(--c);color:#fff;font-size:13px;font-weight:600;width:auto;padding:0 14px;border-radius:20px" onclick="saveProfile()">Save</button>
+  </div>
+  <div class="scrollable" style="padding:16px 16px 100px">
+    <!-- Photo Section -->
+    <div class="white-card" style="text-align:center">
+      <div style="font-weight:600;margin-bottom:12px">Profile Photos</div>
+      <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+        <div style="position:relative">
+          <img src="${ME.img}" style="width:80px;height:80px;border-radius:12px;object-fit:cover"/>
+          <div style="position:absolute;top:4px;right:4px;width:20px;height:20px;background:var(--c);border-radius:50%;color:#fff;font-size:10px;display:flex;align-items:center;justify-content:center;cursor:pointer">✕</div>
+          <div style="position:absolute;bottom:4px;left:4px;background:var(--gold);color:var(--dark);font-size:9px;padding:1px 5px;border-radius:4px;font-weight:700">MAIN</div>
+        </div>
+        ${[1,2].map(i=>`<div style="width:80px;height:80px;border-radius:12px;border:2px dashed var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:24px" onclick="showToast('Photo upload coming soon')">+</div>`).join('')}
+      </div>
+    </div>
+    <!-- Basic Info -->
+    <div class="white-card">
+      <div class="pv-section-title" style="margin-bottom:12px">Basic Information</div>
+      <div class="form-group"><label class="form-label">Full Name</label><input class="form-input" value="${ME.name}"/></div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Age</label><input class="form-input" value="${ME.age}" type="number"/></div>
+        <div class="form-group"><label class="form-label">Height</label><select class="form-input form-select"><option>5'10"</option></select></div>
+      </div>
+      <div class="form-group"><label class="form-label">Gender</label>
+        <select class="form-input form-select"><option>Male</option><option>Female</option><option>Non-Binary</option></select></div>
+      <div class="form-group"><label class="form-label">Marital Status</label>
+        <select class="form-input form-select"><option>Never Married</option><option>Divorced</option><option>Widowed</option></select></div>
+      <div class="form-group"><label class="form-label">About Me</label><textarea class="form-input">${ME.bio}</textarea></div>
+    </div>
+    <!-- Religion & Culture -->
+    <div class="white-card">
+      <div class="pv-section-title" style="margin-bottom:12px">Religion & Culture</div>
+      <div class="form-group"><label class="form-label">Religion</label>
+        <select class="form-input form-select"><option>Hindu</option><option>Muslim</option><option>Christian</option><option>Sikh</option><option>Jain</option></select></div>
+      <div class="form-group"><label class="form-label">Caste</label><input class="form-input" placeholder="Enter caste (optional)"/></div>
+      <div class="form-group"><label class="form-label">Mother Tongue</label>
+        <select class="form-input form-select"><option>Hindi</option><option>Tamil</option><option>Telugu</option><option>Kannada</option><option>Malayalam</option></select></div>
+      <div class="form-group"><label class="form-label">Diet</label>
+        <select class="form-input form-select"><option>Vegetarian</option><option>Non-Vegetarian</option><option>Eggetarian</option><option>Vegan</option></select></div>
+    </div>
+    <!-- Career -->
+    <div class="white-card">
+      <div class="pv-section-title" style="margin-bottom:12px">Education & Career</div>
+      <div class="form-group"><label class="form-label">Education</label><input class="form-input" value="${ME.edu}"/></div>
+      <div class="form-group"><label class="form-label">Profession</label><input class="form-input" value="${ME.profession}"/></div>
+      <div class="form-group"><label class="form-label">Annual Income</label>
+        <select class="form-input form-select"><option>12-18 LPA</option><option>18-25 LPA</option><option>25+ LPA</option></select></div>
+      <div class="form-group"><label class="form-label">City</label><input class="form-input" value="${ME.city}"/></div>
+      <div class="form-group"><label class="form-label">State</label>
+        <select class="form-input form-select"><option>Maharashtra</option><option>Delhi</option><option>Karnataka</option></select></div>
+    </div>
+    <button class="btn btn-red" onclick="saveProfile()">💾 Save Profile</button>
+  </div>`;
+}
+function saveProfile(){showToast('✅ Profile saved successfully!');}
+
+// ═══════════════════════════════════════════════════════
+//  SETTINGS
+// ═══════════════════════════════════════════════════════
+let toggles={notif:true,email:false,sound:true,darkMode:false,twoFA:false};
+function renderSettings(mc){
+  mc.innerHTML=`
+  <div class="top-bar">
+    <button class="back-icon-btn" onclick="switchTab('menu')">←</button>
+    <span class="top-bar-title">⚙️ Account Settings</span>
+  </div>
+  <div class="scrollable" style="padding:16px 16px 100px">
+    <div class="white-card">
+      <div class="pv-section-title" style="margin-bottom:12px">Notifications</div>
+      ${[['Push Notifications','notif'],['Email Alerts','email'],['Sound & Vibration','sound']].map(([l,k])=>`
+      <div class="setting-row">
+        <div class="setting-icon" style="background:var(--bg)">${k==='notif'?'🔔':k==='email'?'📧':'🔊'}</div>
+        <span class="setting-label">${l}</span>
+        <button class="toggle ${toggles[k]?'on':''}" id="tog-${k}" onclick="toggleSetting('${k}')"></button>
+      </div>`).join('')}
+    </div>
+    <div class="white-card">
+      <div class="pv-section-title" style="margin-bottom:12px">Security</div>
+      ${[['Two-Factor Auth','twoFA'],['Dark Mode','darkMode']].map(([l,k])=>`
+      <div class="setting-row">
+        <div class="setting-icon" style="background:var(--bg)">${k==='twoFA'?'🔐':'🌙'}</div>
+        <span class="setting-label">${l}</span>
+        <button class="toggle ${toggles[k]?'on':''}" id="tog-${k}" onclick="toggleSetting('${k}')"></button>
+      </div>`).join('')}
+      <div class="setting-row" onclick="showToast('OTP sent to your mobile')">
+        <div class="setting-icon" style="background:var(--bg)">🔑</div>
+        <span class="setting-label">Change Password</span>
+        <span class="setting-arrow">›</span>
+      </div>
+      <div class="setting-row" onclick="showToast('OTP sent to +91 XXXXX')">
+        <div class="setting-icon" style="background:var(--bg)">📱</div>
+        <span class="setting-label">Verify Mobile</span>
+        <span class="setting-value" style="color:#2e7d32">✓ Verified</span>
+      </div>
+    </div>
+    <div class="white-card">
+      <div class="pv-section-title" style="margin-bottom:12px">Profile Settings</div>
+      <div class="setting-row" onclick="switchTab('privacy')">
+        <div class="setting-icon" style="background:var(--bg)">🔒</div>
+        <span class="setting-label">Privacy Settings</span>
+        <span class="setting-arrow">›</span>
+      </div>
+      <div class="setting-row" onclick="openLocationPanel()">
+        <div class="setting-icon" style="background:var(--bg)">📍</div>
+        <span class="setting-label">Location & Search Radius</span>
+        <span class="setting-value">Mumbai · 50km</span>
+        <span class="setting-arrow">›</span>
+      </div>
+      <div class="setting-row" onclick="showToast('Language settings')">
+        <div class="setting-icon" style="background:var(--bg)">🌐</div>
+        <span class="setting-label">Language</span>
+        <span class="setting-value">English</span>
+        <span class="setting-arrow">›</span>
+      </div>
+    </div>
+    <div class="white-card">
+      <div class="pv-section-title" style="margin-bottom:12px">Account</div>
+      <div class="setting-row" onclick="openPayment()">
+        <div class="setting-icon" style="background:#f3e5f5">👑</div>
+        <span class="setting-label">Manage Subscription</span>
+        <span class="setting-value" style="color:#7b1fa2">Premium Active</span>
+        <span class="setting-arrow">›</span>
+      </div>
+      <div class="setting-row" onclick="showToast('Support ticket created')">
+        <div class="setting-icon" style="background:var(--bg)">❓</div>
+        <span class="setting-label">Help & Support</span>
+        <span class="setting-arrow">›</span>
+      </div>
+      <div class="setting-row" style="color:#e53935">
+        <div class="setting-icon" style="background:#ffebee">🗑</div>
+        <span class="setting-label" style="color:#e53935">Delete Account</span>
+        <span class="setting-arrow" style="color:#e53935">›</span>
+      </div>
+    </div>
+    <p style="text-align:center;font-size:12px;color:var(--muted);margin-top:8px">Jodi.in v2.0.1 · Made with ♥ in India</p>
+  </div>`;
+}
+function toggleSetting(k){
+  toggles[k]=!toggles[k];
+  const btn=document.getElementById('tog-'+k);
+  if(btn)btn.classList.toggle('on',toggles[k]);
+  showToast(toggles[k]?'Enabled':'Disabled');
+}
+
+// ═══════════════════════════════════════════════════════
+//  PRIVACY
+// ═══════════════════════════════════════════════════════
+let privacyToggles={showPhone:false,showEmail:false,showLastSeen:true,showOnline:true,whoCanMsg:'Matches Only',profileVisible:true,hideFromContacts:false};
+function renderPrivacy(mc){
+  mc.innerHTML=`
+  <div class="top-bar">
+    <button class="back-icon-btn" onclick="switchTab('settings')">←</button>
+    <span class="top-bar-title">🔒 Privacy Settings</span>
+  </div>
+  <div class="scrollable" style="padding:16px 16px 100px">
+    <div class="white-card">
+      <div class="pv-section-title" style="margin-bottom:12px">Contact Visibility</div>
+      ${[['Show Phone Number','showPhone'],['Show Email Address','showEmail']].map(([l,k])=>`
+      <div class="setting-row">
+        <div class="setting-icon" style="background:var(--bg)">${k==='showPhone'?'📱':'📧'}</div>
+        <div style="flex:1"><div class="setting-label">${l}</div><div style="font-size:11px;color:var(--muted)">Only matches can see</div></div>
+        <button class="toggle ${privacyToggles[k]?'on':''}" id="ptog-${k}" onclick="togglePrivacy('${k}')"></button>
+      </div>`).join('')}
+    </div>
+    <div class="white-card">
+      <div class="pv-section-title" style="margin-bottom:12px">Activity Status</div>
+      ${[['Show Last Seen','showLastSeen'],['Show Online Status','showOnline'],['Profile Visible to Others','profileVisible'],['Hide from Contacts','hideFromContacts']].map(([l,k])=>`
+      <div class="setting-row">
+        <div class="setting-icon" style="background:var(--bg)">${k==='showLastSeen'?'🕐':k==='showOnline'?'🟢':k==='profileVisible'?'👁':'🙈'}</div>
+        <span class="setting-label">${l}</span>
+        <button class="toggle ${privacyToggles[k]?'on':''}" id="ptog-${k}" onclick="togglePrivacy('${k}')"></button>
+      </div>`).join('')}
+    </div>
+    <div class="white-card">
+      <div class="pv-section-title" style="margin-bottom:12px">Messaging</div>
+      <div class="setting-row">
+        <div class="setting-icon" style="background:var(--bg)">💬</div>
+        <div style="flex:1"><div class="setting-label">Who Can Message Me</div></div>
+      </div>
+      ${['Everyone','Matches Only','No One'].map(opt=>`
+      <div style="display:flex;align-items:center;gap:12px;padding:10px 0;cursor:pointer" onclick="privacyToggles.whoCanMsg='${opt}';renderPrivacy(document.getElementById('main-content'))">
+        <div style="width:20px;height:20px;border-radius:50%;border:2px solid ${privacyToggles.whoCanMsg===opt?'var(--c)':'var(--border)'};display:flex;align-items:center;justify-content:center">
+          ${privacyToggles.whoCanMsg===opt?'<div style="width:10px;height:10px;border-radius:50%;background:var(--c)"></div>':''}
+        </div>
+        <span style="font-size:14px;color:var(--dark)">${opt}</span>
+      </div>`).join('')}
+    </div>
+    <div class="white-card">
+      <div class="pv-section-title" style="margin-bottom:12px">Blocked Profiles</div>
+      <div style="text-align:center;padding:20px;color:var(--muted)">
+        <div style="font-size:32px;margin-bottom:8px">🚫</div>
+        <div style="font-size:14px">No blocked profiles</div>
+      </div>
+    </div>
+    <button class="btn btn-red" onclick="showToast('✅ Privacy settings saved')">Save Privacy Settings</button>
+  </div>`;
+}
+function togglePrivacy(k){
+  privacyToggles[k]=!privacyToggles[k];
+  const btn=document.getElementById('ptog-'+k);
+  if(btn)btn.classList.toggle('on',privacyToggles[k]);
+  showToast(privacyToggles[k]?'Enabled':'Disabled');
+}
+
+// ═══════════════════════════════════════════════════════
+//  HELP & SUPPORT
+// ═══════════════════════════════════════════════════════
+function renderHelp(mc){
+  const faqs=[
+    ['How do I send an interest?','Go to any profile and tap the 💌 Interest button. The person will be notified and can accept or decline your request.'],
+    ['How does matching work?','Our AI algorithm matches based on preferences, location, religion, education and lifestyle compatibility to suggest the best matches for you.'],
+    ['How do I delete my account?','Go to Menu → Account Settings → scroll down and tap Delete Account. Note: this action is irreversible.'],
+    ['Can I hide my profile?','Yes! Go to Privacy Settings and toggle off "Profile Visible to Others" to hide your profile temporarily.'],
+    ['How do I verify my profile?','Upload a government ID (Aadhaar/PAN/Passport) via Menu → Edit Profile → Verification. Our team reviews within 24 hours.'],
+    ['What is Premium membership?','Premium gives you unlimited interests, see who viewed your profile, advanced filters, and priority in search results.'],
+  ];
+  mc.innerHTML=`
+  <div class="top-bar">
+    <button class="back-icon-btn" onclick="switchTab('menu')">←</button>
+    <span class="top-bar-title">❓ Help & Support</span>
+  </div>
+  <div class="scrollable" style="padding:16px 16px 100px">
+    <div style="background:linear-gradient(135deg,var(--c),var(--cr));border-radius:16px;padding:20px;margin-bottom:16px;text-align:center;color:#fff">
+      <div style="font-size:32px;margin-bottom:8px">💬</div>
+      <div style="font-weight:700;font-size:16px">Need Help?</div>
+      <div style="font-size:13px;opacity:.85;margin:6px 0 14px">Our support team is available 24/7</div>
+      <div style="display:flex;gap:10px">
+        <button class="btn" style="flex:1;background:rgba(255,255,255,.2);color:#fff;border:1.5px solid rgba(255,255,255,.4);padding:10px;border-radius:12px;font-size:13px" onclick="showToast('Opening live chat…')">💬 Live Chat</button>
+        <button class="btn" style="flex:1;background:rgba(255,255,255,.2);color:#fff;border:1.5px solid rgba(255,255,255,.4);padding:10px;border-radius:12px;font-size:13px" onclick="showToast('Opening email client…')">📧 Email Us</button>
+      </div>
+    </div>
+    <div class="white-card">
+      <div style="font-size:16px;font-weight:700;color:var(--dark);margin-bottom:14px">Frequently Asked Questions</div>
+      ${faqs.map((f,i)=>`
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(${i})">
+          <span>${f[0]}</span>
+          <span id="faq-arr-${i}">▼</span>
+        </div>
+        <div class="faq-a" id="faq-a-${i}">${f[1]}</div>
+      </div>`).join('')}
+    </div>
+    <div class="white-card">
+      <div style="font-size:15px;font-weight:600;color:var(--dark);margin-bottom:12px">Send Feedback</div>
+      <div class="form-group"><label class="form-label">Topic</label>
+        <select class="form-input form-select"><option>Technical Issue</option><option>Account Problem</option><option>Payment Issue</option><option>Fake Profile Report</option><option>Feature Request</option><option>Other</option></select></div>
+      <div class="form-group"><label class="form-label">Message</label>
+        <textarea class="form-input" placeholder="Describe your issue or feedback…"></textarea></div>
+      <button class="btn btn-red" onclick="showToast('✅ Feedback submitted! We\'ll respond within 24 hours')">Submit Feedback</button>
+    </div>
+    <div style="text-align:center;padding:12px;font-size:12px;color:var(--muted)">📞 Support: 1800-123-JODI (Mon-Sat, 9AM-8PM IST)</div>
+  </div>`;
+}
+function toggleFaq(i){
+  const a=document.getElementById('faq-a-'+i);
+  const arr=document.getElementById('faq-arr-'+i);
+  const open=a.classList.toggle('open');
+  if(arr)arr.textContent=open?'▲':'▼';
+}
+
+// ═══════════════════════════════════════════════════════
+//  FILTER PANEL
+// ═══════════════════════════════════════════════════════
+function openFilter(){
+  document.getElementById('filter-content').innerHTML=`
+  <div class="form-group">
+    <label class="form-label">Age Range — <span id="age-range-lbl">${filterSettings.ageMin}–${filterSettings.ageMax} yrs</span></label>
+    <div style="display:flex;gap:12px;align-items:center">
+      <input type="range" min="18" max="50" value="${filterSettings.ageMin}" style="flex:1" oninput="filterSettings.ageMin=+this.value;document.getElementById('age-range-lbl').textContent=filterSettings.ageMin+'–'+filterSettings.ageMax+' yrs'"/>
+      <input type="range" min="18" max="60" value="${filterSettings.ageMax}" style="flex:1" oninput="filterSettings.ageMax=+this.value;document.getElementById('age-range-lbl').textContent=filterSettings.ageMin+'–'+filterSettings.ageMax+' yrs'"/>
+    </div>
+  </div>
+  <div class="form-group">
+    <label class="form-label">Max Distance — <span id="dist-lbl">${filterSettings.distanceMax} km</span></label>
+    <input type="range" min="5" max="500" value="${filterSettings.distanceMax}" oninput="filterSettings.distanceMax=+this.value;document.getElementById('dist-lbl').textContent=this.value+' km'"/>
+  </div>
+  <div class="form-group"><label class="form-label">Religion</label>
+    <select class="form-input form-select" onchange="filterSettings.religion=this.value">
+      ${['Any','Hindu','Muslim','Christian','Sikh','Jain','Buddhist'].map(r=>`<option ${filterSettings.religion===r?'selected':''}>${r}</option>`).join('')}
+    </select>
+  </div>
+  <div class="form-group"><label class="form-label">Annual Income</label>
+    <select class="form-input form-select" onchange="filterSettings.income=this.value">
+      ${['Any','Below 3 LPA','3-5 LPA','5-10 LPA','10-20 LPA','20+ LPA'].map(r=>`<option ${filterSettings.income===r?'selected':''}>${r}</option>`).join('')}
+    </select>
+  </div>
+  <div class="form-group"><label class="form-label">Diet</label>
+    <select class="form-input form-select" onchange="filterSettings.diet=this.value">
+      ${['Any','Vegetarian','Non-Vegetarian','Eggetarian','Vegan'].map(r=>`<option ${filterSettings.diet===r?'selected':''}>${r}</option>`).join('')}
+    </select>
+  </div>
+  <div class="form-group"><label class="form-label">Gender</label>
+    <div style="display:flex;flex-wrap:wrap">
+      ${['Female','Male','Non-Binary','Any'].map(g=>`<span class="filter-chip ${g==='Female'?'sel':''}" onclick="document.querySelectorAll('.filter-chip').forEach(c=>{if(c.parentElement===this.parentElement)c.classList.remove('sel')});this.classList.add('sel')">${g}</span>`).join('')}
+    </div>
+  </div>
+  <div class="form-group"><label class="form-label">Marital Status</label>
+    <div style="display:flex;flex-wrap:wrap">
+      ${['Any','Never Married','Divorced','Widowed'].map(g=>`<span class="filter-chip ${g==='Never Married'?'sel':''}" onclick="document.querySelectorAll('[data-ms]').forEach(c=>c.classList.remove('sel'));this.classList.add('sel')" data-ms="${g}">${g}</span>`).join('')}
+    </div>
+  </div>`;
+  document.getElementById('filter-panel').classList.add('open');
+}
+function closeFilter(){document.getElementById('filter-panel').classList.remove('open');}
+function applyFilter(){closeFilter();showToast('✅ Filters applied! '+PROFILES.filter(p=>p.age>=filterSettings.ageMin&&p.age<=filterSettings.ageMax&&p.distance<=filterSettings.distanceMax).length+' profiles found');}
+function resetFilter(){filterSettings={ageMin:18,ageMax:60,heightMin:140,heightMax:200,religion:'Any',income:'Any',diet:'Any',distanceMax:500};showToast('Filters reset');}
+
+// ═══════════════════════════════════════════════════════
+//  LOCATION PANEL
+// ═══════════════════════════════════════════════════════
+function openLocationPanel(){
+  document.getElementById('location-content').innerHTML=`
+  <div class="map-box" style="margin-bottom:16px">
+    <div class="map-radius">
+      <span style="font-size:13px;font-weight:600;color:var(--c)">${locationSettings.radius}km</span>
+    </div>
+    <div class="map-pin" style="position:absolute;top:12px">📍</div>
+    <div style="position:absolute;bottom:10px;font-size:12px;color:#666;font-weight:500">📍 ${locationSettings.city}, ${locationSettings.state}</div>
+  </div>
+  <div class="form-group">
+    <label class="form-label">Your City</label>
+    <input class="form-input" id="loc-city" value="${locationSettings.city}"/>
+  </div>
+  <div class="form-group">
+    <label class="form-label">Your State</label>
+    <select class="form-input form-select" id="loc-state">
+      ${['Maharashtra','Delhi','Karnataka','Tamil Nadu','Telangana','Kerala','Gujarat','Rajasthan','Punjab','West Bengal','Uttar Pradesh','Madhya Pradesh'].map(s=>`<option ${locationSettings.state===s?'selected':''}>${s}</option>`).join('')}
+    </select>
+  </div>
+  <div class="form-group">
+    <label class="form-label" style="display:flex;justify-content:space-between">
+      <span>Search Radius (Diameter)</span>
+      <span id="radius-display" style="color:var(--c);font-weight:600">${locationSettings.radius} km</span>
+    </label>
+    <input type="range" min="5" max="500" value="${locationSettings.radius}" id="radius-slider" oninput="locationSettings.radius=+this.value;document.getElementById('radius-display').textContent=this.value+' km';document.querySelector('.map-radius span').textContent=this.value+'km'"/>
+    <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-top:4px"><span>5 km</span><span>500 km</span></div>
+  </div>
+  <div style="background:var(--bg);border-radius:12px;padding:12px;font-size:13px;color:var(--muted);margin-bottom:16px">
+    📊 Estimated profiles in range: <span style="color:var(--c);font-weight:700">${Math.floor(locationSettings.radius * 2.4)}</span> profiles
+  </div>
+  <div style="display:flex;gap:10px;margin-bottom:16px">
+    <button class="btn btn-outline" style="flex:1;padding:10px;font-size:13px;border-radius:12px" onclick="showToast('Getting your location…')">📍 Auto-detect</button>
+    <button class="btn btn-outline" style="flex:1;padding:10px;font-size:13px;border-radius:12px" onclick="showToast('Opening map…')">🗺 Pick on Map</button>
+  </div>`;
+  document.getElementById('location-panel').classList.add('open');
+}
+function saveLocation(){
+  locationSettings.city=document.getElementById('loc-city').value;
+  locationSettings.state=document.getElementById('loc-state').value;
+  document.getElementById('location-panel').classList.remove('open');
+  showToast('📍 Location settings saved!');
+}
+
+// ═══════════════════════════════════════════════════════
+//  PAYMENT
+// ═══════════════════════════════════════════════════════
+let selPlan='gold';
+function openPayment(){
+  document.getElementById('payment-content').innerHTML=`
+  <div style="text-align:center;margin-bottom:16px">
+    <div style="font-size:13px;color:var(--muted)">Unlock premium features and find your perfect match faster</div>
+  </div>
+  ${[
+    {id:'silver',name:'Silver',price:'₹499',period:'/month',features:'50 Interests/day\nSee who viewed\nBasic filters\nChat with matches',popular:false},
+    {id:'gold',name:'Gold',price:'₹999',period:'/month',features:'Unlimited Interests\nPriority in search\nAdvanced filters\nVideo calling\nProfile boost',popular:true},
+    {id:'platinum',name:'Platinum',price:'₹2499',period:'/3 months',features:'Everything in Gold\nPersonalized matchmaking\nDedicated relationship manager\nBackground verification\nAI compatibility report',popular:false},
+  ].map(p=>`
+  <div class="plan-card ${selPlan===p.id?'selected':''} ${p.popular?'popular':''}" onclick="selPlan='${p.id}';document.querySelectorAll('.plan-card').forEach(c=>{c.classList.toggle('selected',c.getAttribute('onclick').includes('${p.id}'))})">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start">
+      <div><div class="plan-name">👑 ${p.name}</div><div class="plan-price">${p.price}<span style="font-size:14px;color:var(--muted)">${p.period}</span></div></div>
+      <div style="width:22px;height:22px;border-radius:50%;border:2px solid ${selPlan===p.id?'var(--c)':'var(--border)'};display:flex;align-items:center;justify-content:center;flex-shrink:0">
+        ${selPlan===p.id?'<div style="width:12px;height:12px;border-radius:50%;background:var(--c)"></div>':''}
+      </div>
+    </div>
+    <div class="plan-features">${p.features.split('\n').map(f=>`✓ ${f}`).join('<br/>')}</div>
+  </div>`).join('')}
+  <div class="white-card">
+    <div style="font-size:15px;font-weight:600;color:var(--dark);margin-bottom:12px">💳 Payment Method</div>
+    ${['UPI (GPay, PhonePe, Paytm)','Credit / Debit Card','Net Banking','EMI Options'].map((m,i)=>`
+    <div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);cursor:pointer">
+      <span style="font-size:20px">${['📱','💳','🏦','🔄'][i]}</span>
+      <span style="font-size:14px;font-weight:500;flex:1">${m}</span>
+      <span style="color:#ccc">›</span>
+    </div>`).join('')}
+  </div>
+  <button class="btn btn-gold" onclick="completePurchase()">💳 Proceed to Pay</button>
+  <p style="text-align:center;font-size:11px;color:var(--muted);margin-top:10px">🔒 Secured by Razorpay · Auto-renewal can be cancelled anytime</p>`;
+  document.getElementById('payment-panel').classList.add('open');
+}
+function completePurchase(){
+  document.getElementById('payment-panel').classList.remove('open');
+  showToast('🎉 Payment successful! Premium activated.',3000);
+  ME.premium=true;
+}
+
+// ═══════════════════════════════════════════════════════
+//  ADMIN PANEL
+// ═══════════════════════════════════════════════════════
+function renderAdmin(){
+  const content=document.getElementById('admin-content');
+  content.innerHTML=`
+  <!-- Stats Grid -->
+  <div class="admin-row">
+    <div class="admin-stat"><div class="admin-stat-num" style="color:var(--c)">12,847</div><div class="admin-stat-label">Total Users</div></div>
+    <div class="admin-stat"><div class="admin-stat-num" style="color:#2e7d32">+124</div><div class="admin-stat-label">New Today</div></div>
+  </div>
+  <div class="admin-row">
+    <div class="admin-stat"><div class="admin-stat-num" style="color:#1565c0">4,231</div><div class="admin-stat-label">Active Now</div></div>
+    <div class="admin-stat"><div class="admin-stat-num" style="color:#7b1fa2">892</div><div class="admin-stat-label">Premium Users</div></div>
+  </div>
+  <div class="admin-row">
+    <div class="admin-stat"><div class="admin-stat-num" style="color:#e65100">38</div><div class="admin-stat-label">Pending Verify</div></div>
+    <div class="admin-stat"><div class="admin-stat-num" style="color:#f44336">7</div><div class="admin-stat-label">Reports</div></div>
+  </div>
+
+  <!-- Quick Actions -->
+  <div class="admin-section">
+    <div class="admin-section-title">⚡ Quick Actions</div>
+    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px">
+      ${[['✓ Verify Profiles','#e8f5e9','#2e7d32'],['📧 Send Bulk Email','#e3f2fd','#1565c0'],['🚫 Ban User','#ffebee','#c62828'],['📢 Push Notification','#fff8e1','#e65100'],['💰 View Revenue','#f3e5f5','#7b1fa2'],['📊 Export Report','#e8eaf6','#3949ab']].map(([l,bg,col])=>`
+      <button style="background:${bg};color:${col};border:none;border-radius:12px;padding:12px;font-size:13px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;text-align:left" onclick="showToast('${l} — feature activated')">${l}</button>`).join('')}
+    </div>
+  </div>
+
+  <!-- Pending Verifications -->
+  <div class="admin-section">
+    <div class="admin-section-title">🔍 Pending Verification</div>
+    ${PROFILES.slice(0,4).map(p=>`
+    <div class="user-row">
+      <img src="${p.img}" class="user-row-img"/>
+      <div class="user-row-info"><div class="user-row-name">${p.name}, ${p.age}</div><div class="user-row-detail">${p.city} · ${p.profession}</div></div>
+      <div class="status-dot pending"></div>
+      <div style="display:flex;gap:6px">
+        <button style="background:#e8f5e9;color:#2e7d32;border:none;border-radius:8px;padding:6px 10px;font-size:12px;cursor:pointer;font-weight:600" onclick="showToast('Profile verified ✓')">✓</button>
+        <button style="background:#ffebee;color:#c62828;border:none;border-radius:8px;padding:6px 10px;font-size:12px;cursor:pointer;font-weight:600" onclick="showToast('Profile rejected')">✕</button>
+      </div>
+    </div>`).join('')}
+  </div>
+
+  <!-- Reported Profiles -->
+  <div class="admin-section">
+    <div class="admin-section-title">🚨 Recent Reports</div>
+    ${PROFILES.slice(2,5).map(p=>`
+    <div class="user-row">
+      <img src="${p.img}" class="user-row-img"/>
+      <div class="user-row-info"><div class="user-row-name">${p.name}</div><div class="user-row-detail" style="color:#e65100">Reported: Fake Profile</div></div>
+      <div style="display:flex;gap:6px">
+        <button style="background:#fff8e1;color:#e65100;border:none;border-radius:8px;padding:6px 10px;font-size:12px;cursor:pointer" onclick="showToast('Profile under review')">Review</button>
+        <button style="background:#ffebee;color:#c62828;border:none;border-radius:8px;padding:6px 10px;font-size:12px;cursor:pointer" onclick="showToast('Profile banned')">Ban</button>
+      </div>
+    </div>`).join('')}
+  </div>
+
+  <!-- All Users -->
+  <div class="admin-section">
+    <div class="admin-section-title">👥 All Users</div>
+    <div style="display:flex;gap:8px;margin-bottom:12px">
+      <input style="flex:1;border:1.5px solid var(--border);border-radius:10px;padding:8px 12px;font-size:13px;outline:none;font-family:'DM Sans',sans-serif" placeholder="Search users…"/>
+      <select style="border:1.5px solid var(--border);border-radius:10px;padding:8px;font-size:13px;outline:none;font-family:'DM Sans',sans-serif;background:#fff">
+        <option>All</option><option>Premium</option><option>Banned</option><option>Verified</option>
+      </select>
+    </div>
+    ${PROFILES.map(p=>`
+    <div class="user-row">
+      <img src="${p.img}" class="user-row-img"/>
+      <div class="user-row-info">
+        <div class="user-row-name">${p.name}, ${p.age}</div>
+        <div class="user-row-detail">${p.religion} · ${p.city} · ${p.profession}</div>
+      </div>
+      <div class="status-dot active"></div>
+      <button style="background:var(--bg);border:none;border-radius:8px;padding:6px 10px;font-size:12px;cursor:pointer;color:var(--c);font-weight:600" onclick="showToast('${p.name} profile opened')">View</button>
+    </div>`).join('')}
+  </div>
+
+  <!-- App Settings -->
+  <div class="admin-section">
+    <div class="admin-section-title">⚙️ App Settings</div>
+    ${[['Maintenance Mode','🛠'],['New User Registrations','👤'],['Payment Gateway','💳'],['Email Notifications','📧'],['SMS Alerts','📱']].map(([l,icon],i)=>`
+    <div class="setting-row">
+      <div class="setting-icon" style="background:var(--bg)">${icon}</div>
+      <span class="setting-label">${l}</span>
+      <button class="toggle ${i!==0?'on':''}" onclick="this.classList.toggle('on');showToast('${l} updated')"></button>
+    </div>`).join('')}
+  </div>
+
+  <!-- Revenue -->
+  <div class="admin-section">
+    <div class="admin-section-title">💰 Revenue Overview</div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px">
+      ${[['₹4.2L','Today'],['₹28.7L','This Month'],['₹3.1Cr','This Year']].map(([n,l])=>`
+      <div style="background:var(--bg);border-radius:12px;padding:12px;text-align:center">
+        <div style="font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:700;color:var(--c)">${n}</div>
+        <div style="font-size:11px;color:var(--muted)">${l}</div>
+      </div>`).join('')}
+    </div>
+  </div>
+  <p style="text-align:center;font-size:12px;color:var(--muted);padding:12px">Jodi.in Admin v2.0 · Last sync: Just now</p>`;
+}
+
+// ═══════════════════════════════════════════════════════
+//  PWA MANIFEST & SERVICE WORKER
+// ═══════════════════════════════════════════════════════
+const manifest={name:"Jodi.in — Matrimonial",short_name:"Jodi.in",start_url:"./",display:"standalone",
+  background_color:"#140608",theme_color:"#B5121B",orientation:"portrait",
+  icons:[{src:"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' rx='40' fill='%23B5121B'/%3E%3Ctext x='96' y='130' font-size='110' text-anchor='middle' fill='white'%3E%E2%99%A5%3C/text%3E%3C/svg%3E",sizes:"192x192",type:"image/svg+xml"},
+    {src:"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='100' fill='%23B5121B'/%3E%3Ctext x='256' y='360' font-size='300' text-anchor='middle' fill='white'%3E%E2%99%A5%3C/text%3E%3C/svg%3E",sizes:"512x512",type:"image/svg+xml"}]};
+const mBlob=new Blob([JSON.stringify(manifest)],{type:'application/json'});
+const mLink=document.createElement('link');mLink.rel='manifest';mLink.href=URL.createObjectURL(mBlob);document.head.appendChild(mLink);
+
+if('serviceWorker' in navigator){
+  const sw=`const C='jodi-v2';self.addEventListener('install',e=>{self.skipWaiting();});self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(ks=>Promise.all(ks.filter(k=>k!==C).map(k=>caches.delete(k)))));self.clients.claim();});self.addEventListener('fetch',e=>{e.respondWith(fetch(e.request).catch(()=>caches.match(e.request)));});`;
+  const swBlob=new Blob([sw],{type:'text/javascript'});
+  navigator.serviceWorker.register(URL.createObjectURL(swBlob)).catch(()=>{});
+}
+let deferredPrompt=null;
+window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredPrompt=e;
+  setTimeout(()=>{
+    const b=document.createElement('div');
+    b.style.cssText='position:fixed;bottom:72px;left:12px;right:12px;background:linear-gradient(135deg,#B5121B,#E8354A);border-radius:16px;padding:14px 16px;z-index:9000;display:flex;align-items:center;gap:12px;box-shadow:0 8px 24px rgba(181,18,27,.4);animation:sheetUp .4s ease';
+    b.innerHTML=`<span style="font-size:28px">📲</span><div style="flex:1;color:#fff"><b style="font-size:14px;display:block">Add Jodi.in to Home Screen</b><span style="font-size:12px;opacity:.85">Install for the best app experience</span></div><button style="background:#fff;color:#B5121B;border:none;border-radius:10px;padding:8px 14px;font-size:13px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif" onclick="deferredPrompt&&deferredPrompt.prompt();this.parentElement.remove()">Install</button><button style="background:none;border:none;color:rgba(255,255,255,.7);font-size:20px;cursor:pointer;padding:0 4px" onclick="this.parentElement.remove()">×</button>`;
+    document.body.appendChild(b);
+    setTimeout(()=>{if(b.parentElement)b.remove();},8000);
+  },3500);
+});
+</script>
+</body>
+</html>
